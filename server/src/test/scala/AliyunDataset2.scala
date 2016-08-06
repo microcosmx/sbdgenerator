@@ -102,9 +102,9 @@ class AliyunDataset2 extends FlatSpec with Matchers with BeforeAndAfterAll with 
                   Language = line(4).toString, 
                   Gender = line(5).toString)
               ).toSeq
-            val songDF = env.sc.parallelize(songs).toDF
+            val songDF = env.sc.parallelize(songs).toDS
             songDF.printSchema()
-            songDF.limit(10).show()
+            songDF.show()
  
             val mtua = env.sc.textFile("data/mars_tianchi_user_actions.csv")
             val mtua_rdd = mtua.map(_.split(",", -1).map(_.trim)).map { line =>
@@ -114,7 +114,7 @@ class AliyunDataset2 extends FlatSpec with Matchers with BeforeAndAfterAll with 
                   gmt_create = line(2).toString, 
                   action_type = line(3).toString, 
                   Ds = line(4).toString)}
-           val uactDF = mtua_rdd.toDF
+           val uactDF = mtua_rdd.toDS
            uactDF.printSchema()
            uactDF.show()     
             
@@ -124,7 +124,7 @@ class AliyunDataset2 extends FlatSpec with Matchers with BeforeAndAfterAll with 
            // 2 for downloads
            // 3 for favors
             val result1 = songDF
-                  .filter(songDF("artist_id") === "03c6699ea836decbc5c8fc2dbae7bd3b")
+                  .filter("artist_id = 03c6699ea836decbc5c8fc2dbae7bd3b")
                   .join(uactDF, songDF("song_id") === uactDF("song_id"))
                   //.filter(songDF("publish_time") >= uactDF("Ds"))
                   .filter(uactDF("action_type") === 1)

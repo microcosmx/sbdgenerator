@@ -7,7 +7,7 @@ libraryDependencies ++= Seq(
     "io.spray" %% "spray-routing"   % "1.3.3",
     "io.spray" %% "spray-client"    % "1.3.3",
     "io.spray" %% "spray-json"      % "1.3.2",
-
+    
     "log4j" % "log4j" % "1.2.17",
 
     "org.gnieh" %% "diffson" % "1.1.0",
@@ -34,6 +34,8 @@ libraryDependencies ++= Seq(
 
     "org.scalatest" %% "scalatest" % "2.2.6" % "test",
     "org.scalacheck" %% "scalacheck" % "1.13.0" % "test",
+    
+    "com.typesafe.akka" %% "akka-actor" % "2.3.15",
     "com.typesafe.akka" %% "akka-testkit" % "2.4.4" % "test"
 	
 )

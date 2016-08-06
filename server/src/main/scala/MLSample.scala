@@ -292,7 +292,7 @@ case class MLSample(
     }
     
     
-    def LinearRegressionTest(result:DataFrame) = {
+    def LinearRegressionTest(result:Dataset[(String, Int, Int)]) = {
       // Load and parse the data
 //      val data = sc.textFile("data/lpsa.data",1)
 //      val parsedData = data.map { line =>
@@ -300,10 +300,12 @@ case class MLSample(
 //        LabeledPoint(parts(0).toDouble, Vectors.dense(parts(1).split(' ').map(_.toDouble)))
 //      }.cache()
       
-      val parsedData = result.map { row => 
+      //import sqlContext.implicits._
+      
+      val parsedData = result.rdd.map { row => 
 //          val artist_id = row(0).toString().toDouble
-          val plays = row(1).toString().toDouble
-          val ds = row(2).toString().toDouble
+          val plays = row._2.toString().toDouble
+          val ds = row._3.toString().toDouble
           LabeledPoint(plays, Vectors.dense(Array(ds)))
       }.cache()
       

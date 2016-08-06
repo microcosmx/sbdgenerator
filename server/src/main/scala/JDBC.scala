@@ -21,26 +21,7 @@ case class JDBC(
             "dbtable" -> s"($queryString)",
             "user" -> userName,
             "password" -> password)
-        val rdd = sqlContext.load("jdbc", conf)
-        val schema = rdd.schema
-        val schema_ = StructType(schema.map { field => field.dataType match {
-                case DateType => field.copy(dataType = StringType)
-                case TimestampType => field.copy(dataType = StringType)
-                case _ => field
-            }
-        })
-        val dataTypes = schema.map(_.dataType)
-        if (schema == schema_) rdd else {
-            val rdd_ = rdd.map { row =>
-                Row.fromSeq(row.toSeq zip dataTypes map {
-                    case (null, _) => null
-                    case (value, DateType) => value.toString
-                    case (value, TimestampType) => value.toString
-                    case (value, _) => value
-                })
-            }
-            sqlContext.createDataFrame(rdd_, schema_)
-        }
+        sqlContext.read.format("jdbc").options(conf).load()
     }
     
     def fetchJDBC(

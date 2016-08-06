@@ -3,7 +3,7 @@ import akka.routing._
 import org.apache.spark._
 
 object Actors {
-    lazy val remoteAddr = RemoteAddressExtension(SparkEnv.get.actorSystem).address
+    lazy val remoteAddr = RemoteAddressExtension(ActorSystem("sbd")).address
     def remotePath(actor:ActorRef) = actor.path.toStringWithAddress(remoteAddr)
 }
 
