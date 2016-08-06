@@ -151,9 +151,11 @@ case class Server(env:Env) extends Actor with ActorLogging with HttpService {
             if (!count.isEmpty)
                 future { ctx.responder ! HttpResponse(entity = HttpEntity(df.count.toString)) }
             else if (!stream.isEmpty)
-                (context actorOf Props(DataFrameStreamer(ctx.responder, df, drop, take, extra)))
+                future { ctx.responder ! HttpResponse(entity = HttpEntity(df.toString)) }
+                //(context actorOf Props(DataFrameStreamer(ctx.responder, df, drop, take, extra)))
             else
-                (context actorOf Props(DataFrameSender(ctx.responder, df, drop, take, extra)))
+                future { ctx.responder ! HttpResponse(entity = HttpEntity(df.toString)) }
+                //(context actorOf Props(DataFrameSender(ctx.responder, df, drop, take, extra)))
         }
 
     def exceptionHandler = ExceptionHandler {
