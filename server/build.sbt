@@ -1,4 +1,4 @@
-scalaVersion := "2.10.5"
+scalaVersion := "2.11.8"
 name := "sbdgenerator"
 
 libraryDependencies ++= Seq(
@@ -10,20 +10,16 @@ libraryDependencies ++= Seq(
 
     "log4j" % "log4j" % "1.2.17",
     
-    "org.apache.spark" %% "spark-core"      % "1.6.1" % "provided",
-    "org.apache.spark" %% "spark-sql"       % "1.6.1" % "provided",
-    "org.apache.spark" %% "spark-hive"      % "1.6.1" % "provided",
-    "org.apache.spark" %% "spark-mllib"     % "1.6.1" % "provided",
-    "org.apache.spark" %% "spark-streaming" % "1.6.1" % "provided",
-  	"org.apache.spark" %% "spark-streaming-kafka" % "1.6.1" % "provided",
-  	"org.apache.spark" %% "spark-streaming-flume" % "1.6.1" % "provided",
-  	"org.apache.spark" %% "spark-repl" % "1.6.1" % "provided",
+    "org.apache.spark" %% "spark-core"      % "2.0.0" % "provided",
+    "org.apache.spark" %% "spark-sql"       % "2.0.0" % "provided",
+    "org.apache.spark" %% "spark-hive"      % "2.0.0" % "provided",
+    "org.apache.spark" %% "spark-mllib"     % "2.0.0" % "provided",
+    "org.apache.spark" %% "spark-streaming" % "2.0.0" % "provided",
+  	"org.apache.spark" %% "spark-streaming-kafka" % "2.0.0" % "provided",
+  	"org.apache.spark" %% "spark-streaming-flume" % "2.0.0" % "provided",
+  	"org.apache.spark" %% "spark-repl" % "2.0.0" % "provided",
   	
   	//"eu.piotrbuda" %% "scalawebsocket" % "0.1.1",
-  	
-  	"ai.h2o" %% "sparkling-water-core" % "1.6.3" % "provided",
-  	"ai.h2o" %% "sparkling-water-repl" % "1.6.3" % "provided",
-  	"ai.h2o" %% "sparkling-water-examples" % "1.6.3" % "provided",
     
     "org.slf4j" % "slf4j-api" % "1.7.5",
     "org.slf4j" % "slf4j-log4j12" % "1.7.5",
