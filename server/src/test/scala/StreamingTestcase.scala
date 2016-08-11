@@ -8,6 +8,7 @@ import org.apache.avro._
 import org.apache.avro.file._
 import org.apache.avro.reflect._
 import org.apache.hadoop.fs._
+import org.apache.hadoop.conf._
 import org.apache.spark._
 import org.apache.spark.rdd._
 import org.apache.spark.sql._
@@ -43,6 +44,7 @@ class StreamingTestcase extends FlatSpec with Matchers with BeforeAndAfterAll wi
     implicit val timeout: Timeout = 1.minute
 
     var fs: org.apache.hadoop.fs.FileSystem = null
+    var fs_conf: Configuration = null
     var sc: org.apache.spark.SparkContext = null
     var sqlContext: org.apache.spark.sql.SQLContext = null
 
@@ -53,7 +55,8 @@ class StreamingTestcase extends FlatSpec with Matchers with BeforeAndAfterAll wi
         Logger.getLogger("akka").setLevel(Level.WARN)
         Logger.getLogger("parquet.hadoop").setLevel(Level.WARN)
 
-        fs = FileSystem.get(new org.apache.hadoop.conf.Configuration)
+        fs_conf = new org.apache.hadoop.conf.Configuration
+        fs = FileSystem.get(fs_conf)
 
         val conf = new org.apache.spark.SparkConf
         conf.set("spark.master", "local[*]")
@@ -62,10 +65,15 @@ class StreamingTestcase extends FlatSpec with Matchers with BeforeAndAfterAll wi
         conf.set("spark.ui.port", "55555")
         conf.set("spark.default.parallelism", "10")
         conf.set("spark.sql.shuffle.partitions", "10")
-//        conf.set("spark.repl.class.uri",H2OInterpreter.classServerUri)
+        conf.set("spark.sql.shuffle.partitions", "1")
+        conf.set("spark.sql.autoBroadcastJoinThreshold", "1")
+        
+        lazy val sparkSession = SparkSession.builder
+          .config(conf)
+          .getOrCreate()
 
-        sc = new org.apache.spark.SparkContext(conf)
-        sqlContext = new org.apache.spark.sql.SQLContext(sc)
+        sc = sparkSession.sparkContext
+        sqlContext = sparkSession.sqlContext
 
     }
 

@@ -9,7 +9,7 @@ import org.apache.avro.file._
 import org.apache.avro.reflect._
 import org.apache.hadoop.fs._
 import org.apache.hadoop.conf._
-import org.apache.spark._
+//import org.apache.spark._
 import org.apache.spark.rdd._
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
@@ -63,6 +63,15 @@ import scala.tools.refactoring.common._
 import scala.tools.refactoring.implementations._
 import scala.tools.refactoring.sourcegen._
 import scala.tools.refactoring.transformation._
+
+import org.apache.spark.util._
+
+import org.apache.spark.sql._
+import org.apache.spark.sql.execution.SparkPlanInfo
+import org.apache.spark.sql.execution.ui.SparkPlanGraph
+import org.apache.spark.sql.functions._
+import org.apache.spark.sql.internal.SQLConf
+import org.apache.spark.util.{AccumulatorContext, JsonProtocol}
             
             
 
@@ -73,6 +82,7 @@ class SparkTestcase3 extends FlatSpec with Matchers with BeforeAndAfterAll with 
 
     var fs: org.apache.hadoop.fs.FileSystem = null
     var fs_conf: Configuration = null
+    var sparkSession: SparkSession = null
     var sc: org.apache.spark.SparkContext = null
     var sqlContext: org.apache.spark.sql.SQLContext = null
 
@@ -93,10 +103,16 @@ class SparkTestcase3 extends FlatSpec with Matchers with BeforeAndAfterAll with 
         conf.set("spark.ui.port", "55555")
         conf.set("spark.default.parallelism", "10")
         conf.set("spark.sql.shuffle.partitions", "10")
-//        conf.set("spark.repl.class.uri",H2OInterpreter.classServerUri)
+        conf.set("spark.sql.shuffle.partitions", "1")
+        conf.set("spark.sql.autoBroadcastJoinThreshold", "1")
+        
+        sparkSession = SparkSession.builder
+          .config(conf)
+          .getOrCreate()
 
-        sc = new org.apache.spark.SparkContext(conf)
-        sqlContext = new org.apache.spark.sql.SQLContext(sc)
+        sc = sparkSession.sparkContext
+        sqlContext = sparkSession.sqlContext
+        
 
     }
 
@@ -105,9 +121,6 @@ class SparkTestcase3 extends FlatSpec with Matchers with BeforeAndAfterAll with 
         fs.close()
         system.shutdown()
     }
-    
-    def mkTempPath(path: Path, extension: String = "temp") : Path =
-        new Path(path.getParent, s".${path.getName}-${System.nanoTime}.$extension")
     
 
     it should "run it" in {
@@ -124,57 +137,38 @@ class SparkTestcase3 extends FlatSpec with Matchers with BeforeAndAfterAll with 
             import scala.reflect.internal._
             import scala.reflect.internal.util._
             
-            //System.currentTimeMillis
-//            val srcPath = new Path("data/result_x")
-//            val dstPath = new Path("data/result_x.txt")
-//            val result = sc.parallelize(1 to 10).map(_.toString)
-//            result.saveAsTextFile("data/result_x")
-//            if (fs.exists(dstPath)) {
-//                FileUtil.copy(fs, dstPath, fs, new Path(srcPath, s".${dstPath.getName}-${System.nanoTime}.temp"), true, fs_conf)
-//            }
-//            FileUtil.copyMerge(fs, srcPath, fs, dstPath, true, fs_conf,null)
+            Seq(1, 2, 3).map(i => (i, i.toString)).toDF("int", "str").createOrReplaceTempView("df")
+
+            val result = sparkSession.sql(
+                """
+                  |SELECT x.str, COUNT(*)
+                  |FROM df x JOIN df y ON x.str = y.str
+                  |and x.int > 0 and y.int > 1
+                  |GROUP BY x.str
+                  |having x.str > 2
+                """.stripMargin)
+                
+            result.printSchema()
+            result.show()
+            result.explain()
             
-            /*
-            val srcs_x = FileUtil.stat2Paths(fs.globStatus(srcPath_x), srcPath_x)
-            for (src_x <- srcs_x) {
-                FileUtil.copyMerge(fs, src_x,
-                        fs, dstPath_x, true, fs_conf,null)
-            }
-            * */
+            val rdd_test = result.queryExecution.executedPlan.execute()
+            println(rdd_test.count)
+            println(result.queryExecution.executedPlan.treeString)
+            
+            //Row("1", 1) :: Row("2", 1) :: Row("3", 1) :: Nil)
             
             
-            //multi thread
-            val futureResult = Future.sequence {
-              (1 to 10).map { idx =>
-                future {
-                  val timestamp = System.nanoTime
-            		  println(s"---------parallel------${timestamp}-----")
-                  val src = s"data/result_y.txt-${timestamp}"
-                  val dst = s"data/result_y-${timestamp}.txt"
-                  val dstFinal = s"data/result_y.txt"
-                  val srcPath = new Path(src)
-                  val dstPath = new Path(dst)
-                  println(s"---${dstPath.getParent}---${dstPath.getName}---")
-                  val dstFinalPath = new Path(dstFinal)
-                  val result = sc.parallelize(1 to 10).map(_.toString)
-                  result.saveAsTextFile(src)
-                  FileUtil.copyMerge(fs, srcPath, fs, dstPath, true, fs_conf,null)
-                  blocking{
-                    if (fs.exists(dstFinalPath)) {
-                        val delPath = mkTempPath(dstFinalPath, "delete")
-                        fs.rename(dstFinalPath, delPath)
-                        fs.rename(dstPath, dstFinalPath)
-                        fs.delete(delPath, true)
-                        fs.delete(dstPath, true)
-                    }
-                    else
-                        fs.rename(dstPath, dstFinalPath)
-                  }
-                }
-              }
-            }
+            import org.apache.spark.sql.internal.SQLConf
+            import org.apache.spark.sql.types._
+            import org.apache.spark.storage.StorageLevel.MEMORY_ONLY
             
-            Await.result(futureResult, 20000 second)
+            sc.parallelize(1 to 10).map(i => (i, i.toString))
+              .toDF().createOrReplaceTempView("sizeTst")
+            sparkSession.catalog.cacheTable("sizeTst")
+            val stats = sparkSession.table("sizeTst").queryExecution.analyzed.statistics
+            println(stats.sizeInBytes)
+            println(stats.toString)
             
         }
         catch {
