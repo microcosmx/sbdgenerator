@@ -36,7 +36,10 @@ libraryDependencies ++= Seq(
     "org.scalacheck" %% "scalacheck" % "1.13.0" % "test",
     
     "com.typesafe.akka" %% "akka-actor" % "2.3.15",
-    "com.typesafe.akka" %% "akka-testkit" % "2.4.4" % "test"
+    "com.typesafe.akka" %% "akka-testkit" % "2.4.4" % "test",
+    
+    "com.twitter" %% "util-eval" % "6.35.0",
+    "com.twitter" %% "util-collection" % "6.35.0"
 	
 )
 
@@ -45,3 +48,12 @@ test in assembly := {}
 fork := true
 
 run in Compile <<= Defaults.runTask(fullClasspath in Compile, mainClass in (Compile, run), runner in (Compile, run)) 
+
+assemblyMergeStrategy in assembly := {
+	case PathList("META-INF", "maven", "jline", "jline", xs @ _*) => MergeStrategy.concat
+    case "application.conf" => MergeStrategy.concat
+    case x =>
+        val oldStrategy = (assemblyMergeStrategy in assembly).value
+        oldStrategy(x)
+        
+}
