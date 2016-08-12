@@ -28,26 +28,27 @@ case class Transform(
     spark: SparkSession)
 {
   
-    def trans1(data: Dataset[Row], index: Int) = {
+    def trans1(data: Dataset[Row], indexs: Seq[Int]) = {
       val features = data.schema.fields
-		  println(s"-----trans1----${features(index).name}-----")
-      data.sort(features(index).name)
+      val featureNames = indexs.map(x=>features(x).name)
+      println(s"-----trans1----${featureNames}-----")
+      data.sort(featureNames(0), featureNames.tail:_*)
     }
     
-    def trans2(data: Dataset[Row], index: Int) = {
+    def trans2(data: Dataset[Row], indexs: Seq[Int]) = {
       println("-----trans2---------")
       data
     }
     
-    def trans3(data: Dataset[Row], index: Int) = {
+    def trans3(data: Dataset[Row], indexs: Seq[Int]) = {
       data
     }
     
-    def trans4(data: Dataset[Row], index: Int) = {
+    def trans4(data: Dataset[Row], indexs: Seq[Int]) = {
       data
     }
     
-    def trans5(data: Dataset[Row], index: Int) = {
+    def trans5(data: Dataset[Row], indexs: Seq[Int]) = {
       data
     }
     

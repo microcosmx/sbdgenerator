@@ -115,7 +115,10 @@ class ProcessGen3 extends FlatSpec with Matchers with BeforeAndAfterAll with Tes
             import scala.reflect.runtime.{universe => ru}
             val typeMirror = ru.runtimeMirror(trans.getClass.getClassLoader)
             val instanceMirror = typeMirror.reflect(trans)
-            
+            val members = instanceMirror.symbol.typeSignature.members
+            val transMems = members.filter(_.name.decoded.startsWith("trans"))
+            val transNames = transMems.map(_.name.decoded).toSeq.sortBy(x=>x)
+            println(transNames)
             
             val zip = spark.read
                 //.schema(schema1)
@@ -127,13 +130,19 @@ class ProcessGen3 extends FlatSpec with Matchers with BeforeAndAfterAll with Tes
             var transDS = superzipDS//.filter(x => {x.getInt(0) > 1100}).sort(features(0).name)
             
             val features = superzipDS.schema.fields
-            var handler = Map[String, Int]()
+            var handler = Seq[Tuple2[String, Seq[Int]]]()
             
-            for(x <- Seq("trans1", "trans2", "trans3", "trans4", "trans5")){
-              handler += (x -> Random.nextInt(features.length))
+            for(x <- transNames){
+              var transIdx = Seq[Int]()
+              for(y <- 0 to features.length-1){
+                if(Random.nextInt(2) > 0){
+                  transIdx :+= y
+                }
+              }
+              handler :+= (x, transIdx)
             }
             
-            handler.toSeq.foreach(x => {
+            handler.foreach(x => {
               val methodx = ru.typeOf[Transform].declaration(ru.newTermName(x._1)).asMethod
               transDS = instanceMirror.reflectMethod(methodx)(superzipDS, x._2).asInstanceOf[Dataset[Row]]
             })
