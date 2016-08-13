@@ -47,7 +47,7 @@ import org.apache.spark.sql.types._
 
 import akka.testkit.TestKitBase
 
-class ProcessGen3 extends FlatSpec with Matchers with BeforeAndAfterAll with TestKitBase {
+class ProcessGen_ML extends FlatSpec with Matchers with BeforeAndAfterAll with TestKitBase {
 
     implicit lazy val system = ActorSystem()
     implicit val timeout: Timeout = 1.minute
@@ -114,54 +114,10 @@ class ProcessGen3 extends FlatSpec with Matchers with BeforeAndAfterAll with Tes
             import scala.util._
             import env.sqlContext.implicits._
             
-            import scala.reflect.runtime.{universe => ru}
-            val typeMirror = ru.runtimeMirror(trans.getClass.getClassLoader)
-            val instanceMirror = typeMirror.reflect(trans)
-            val members = instanceMirror.symbol.typeSignature.members
-            val transMems = members.filter(_.name.decoded.startsWith("trans"))
-            val transNames = transMems.map(_.name.decoded).toSeq.sortBy(x=>x)
-            println(transNames)
             
-            val zip = spark.read
-                //.schema(schema1)
-                .option("header", "true")
-                .option("inferSchema", "true")
-                .csv("data2/superzip.csv")
-            val superzipDS = zip.as("superzip")
+            //mlgen.mlpipline()
             
-            var transDS = superzipDS//.filter(x => {x.getInt(0) > 1100}).sort(features(0).name)
-            
-            val features = superzipDS.schema.fields
-            var handler = Seq[Tuple2[String, Seq[Int]]]()
-            
-            for(x <- transNames){
-              var transIdx = Seq[Int]()
-              for(y <- 0 to features.length-1){
-                if(Random.nextInt(2) > 0){
-                  transIdx :+= y
-                }
-              }
-              handler :+= (x, transIdx)
-            }
-            
-            handler.foreach(x => {
-              val methodx = ru.typeOf[Transform].declaration(ru.newTermName(x._1)).asMethod
-              transDS = instanceMirror.reflectMethod(methodx)(transDS, x._2).asInstanceOf[Dataset[Row]]
-            })
-            
-            transDS.printSchema()
-            transDS.show()
-            
-            
-            val mseAvg = mlgen.decisionTreeMSE(transDS)
-            println("Root Mean Squared Error (RMSE) on data set = " + mseAvg)
-            
-            
-            //persist
-            import HadoopConversions._
-            val writeRDD = sc.makeRDD(Seq(transDS.schema.fieldNames.mkString(","))) ++
-                              transDS.map(row=>row.mkString(",")).rdd
-            env.fs.writeFileRDD(writeRDD, "data2/trans.csv")
+            mlgen.mlPipline2()
 
             
         }
