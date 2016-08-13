@@ -201,19 +201,13 @@ case class MLGenetor(
         
         val fs = dataset.schema.fields
         
-        val typemethodMap = Map(
-                "int" -> "getInt",
-                "long" -> "getLong",
-                "double" -> "getDouble",
-                "string" -> "getString",
-                "date" -> "getDate"
-          )
         val datasetRDD = dataset.rdd.map { row => 
               val typeMirror = ru.runtimeMirror(row.getClass.getClassLoader)
               val instanceMirror = typeMirror.reflect(row)
               val fsValue = fs.zipWithIndex.filter(x=>x._1.dataType.simpleString=="double").map(x => {
-                  val methodX = ru.typeOf[Row].declaration(ru.newTermName(typemethodMap(x._1.dataType.simpleString))).asMethod
-                  instanceMirror.reflectMethod(methodX)(x._2).asInstanceOf[Double]
+                  val methodX = ru.typeOf[Row].declaration(ru.newTermName("get")).asMethod
+                  val thevalue = instanceMirror.reflectMethod(methodX)(x._2)
+                  if(thevalue==null) 0.0 else thevalue.asInstanceOf[Double]
               }).toArray
               
               val label = fsValue.head
