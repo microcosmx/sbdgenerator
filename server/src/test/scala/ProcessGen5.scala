@@ -115,17 +115,22 @@ class ProcessGen5 extends FlatSpec with Matchers with BeforeAndAfterAll with Tes
             import GA._
             
             var population =  initPopulation(CalFitnessTwo)
-            //var population =  initPopulation(CalFitnessOne)
-            var smallest = population.max.fitness
+            
+            println(population)
+            
+            var smallest = population.head.fitness
             var temp = 0.0
             for(i <- 0 until MAX_GENERATION){
               population = selectChromosome(population)
               //population = CrossOver_Mutation(population, CalFitnessOne)
               population = CrossOver_Mutation(population, CalFitnessTwo)
-              temp = population.max.fitness
+              temp = population.head.fitness
               if(temp < smallest) smallest = temp
             }
-            println(s"函数极值为 $smallest")
+            
+            println("--------------result----------------")
+            println(s"--transforms: ${population.head.sequence.toSeq}")
+            println(s"RMSE = $smallest")
 
             
         }

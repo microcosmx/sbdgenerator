@@ -131,6 +131,9 @@ class ProcessGen3 extends FlatSpec with Matchers with BeforeAndAfterAll with Tes
             
             var transDS = superzipDS//.filter(x => {x.getInt(0) > 1100}).sort(features(0).name)
             
+            transDS.printSchema()
+            transDS.show()
+            
             val features = superzipDS.schema.fields
             var handler = Seq[Tuple2[String, Seq[Int]]]()
             
