@@ -48,7 +48,7 @@ import org.apache.spark.sql.types._
 import akka.testkit.TestKitBase
 
 
-class ProcessGen_GA extends FlatSpec with Matchers with BeforeAndAfterAll with TestKitBase {
+class ProcessGen5 extends FlatSpec with Matchers with BeforeAndAfterAll with TestKitBase {
 
     implicit lazy val system = ActorSystem()
     implicit val timeout: Timeout = 1.minute
@@ -112,7 +112,7 @@ class ProcessGen_GA extends FlatSpec with Matchers with BeforeAndAfterAll with T
 
         try{
             import env.sqlContext.implicits._
-            import YiChuan._
+            import GA._
             
             var population =  initPopulation(CalFitnessTwo)
             //var population =  initPopulation(CalFitnessOne)

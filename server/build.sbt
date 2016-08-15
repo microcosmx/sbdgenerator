@@ -39,7 +39,9 @@ libraryDependencies ++= Seq(
     "com.typesafe.akka" %% "akka-testkit" % "2.4.4" % "test",
     
     "com.twitter" %% "util-eval" % "6.35.0",
-    "com.twitter" %% "util-collection" % "6.35.0"
+    "com.twitter" %% "util-collection" % "6.35.0",
+    
+    "org.bitbucket.fwilhelm" % "org.jenetics" % "3.5.1"
 	
 )
 
