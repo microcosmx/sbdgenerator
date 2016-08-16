@@ -237,7 +237,7 @@ case class MLGenetor(
         
         val model = pipeline.fit(trainingData)
         val predictions = model.transform(testData)
-        predictions.select("prediction", "label", "features").show(5)
+        //predictions.select("prediction", "label", "features").show(5)
         
         // Select (prediction, true label) and compute test error.
         val evaluator = new RegressionEvaluator()

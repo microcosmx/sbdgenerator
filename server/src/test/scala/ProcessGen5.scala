@@ -122,6 +122,8 @@ class ProcessGen5 extends FlatSpec with Matchers with BeforeAndAfterAll with Tes
             var temp = 0.0
             for(i <- 0 until MAX_GENERATION){
               population = selectChromosome(population)
+              println(s"--------------gen $i----------------")
+              println(population.map(x=>x.sequence.toSeq).toSeq)
               //population = CrossOver_Mutation(population, CalFitnessOne)
               population = CrossOver_Mutation(population, CalFitnessTwo)
               temp = population.head.fitness
@@ -129,7 +131,7 @@ class ProcessGen5 extends FlatSpec with Matchers with BeforeAndAfterAll with Tes
             }
             
             println("--------------result----------------")
-            println(s"--transforms: ${population.head.sequence.toSeq}")
+            println(s"--transforms: ${population.map(x=>x.sequence.toSeq).toSeq}")
             println(s"RMSE = $smallest")
 
             
