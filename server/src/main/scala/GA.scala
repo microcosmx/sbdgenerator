@@ -103,10 +103,7 @@ object GA {
       .csv("data2/superzip.csv")
   val superzipDS = zip.as("superzip")
   
-  var transDS = superzipDS//.filter(x => {x.getInt(0) > 1100}).sort(features(0).name)
-  
   val features = superzipDS.schema.fields
-  
   //基因长度
   val length = features.length * transNames.length
   println(s"----------$length")
@@ -146,11 +143,14 @@ object GA {
    */
   //sequence sample: array with 50 (0/1)
   def CalFitnessTwo(sequence: Array[Int]) = {
+    /*
     //将二进制转为十进制
     val x = (0.0 /: (0 until sequence.length)){
         (acc, elem) =>  acc + sequence(elem) * Math.pow(2.0, elem)
     }
-    //代入函数得出适应度值
+    */
+    
+    var transDS = superzipDS//.filter(x => {x.getInt(0) > 1100}).sort(features(0).name)
     var handler = Seq[Tuple2[String, Seq[Int]]]()
   
     for(x <- transNames.zipWithIndex){
@@ -171,7 +171,7 @@ object GA {
     //transDS.printSchema()
     //transDS.show()
     
-    
+    //代入函数得出适应度值
     val mseAvg = mlgen.decisionTreeMSE(transDS)
     println("Root Mean Squared Error (RMSE) on data set = " + mseAvg)
     
