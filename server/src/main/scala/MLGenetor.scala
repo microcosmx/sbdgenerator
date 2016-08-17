@@ -212,10 +212,22 @@ case class MLGenetor(
                   val methodX = ru.typeOf[Row].declaration(ru.newTermName("get")).asMethod
                   val thevalue = instanceMirror.reflectMethod(methodX)(x._2)
                   if(thevalue==null) 0.0 else thevalue.asInstanceOf[Double]
-              }).toArray
+              }).toSeq
+              val fsValueInt = fs.zipWithIndex.filter(x=>x._1.dataType.simpleString=="int").map(x => {
+                  val methodX = ru.typeOf[Row].declaration(ru.newTermName("get")).asMethod
+                  val thevalue = instanceMirror.reflectMethod(methodX)(x._2)
+                  if(thevalue==null) 0.0 else thevalue.asInstanceOf[Int].toDouble
+              }).toSeq
+              val fsValueLong = fs.zipWithIndex.filter(x=>x._1.dataType.simpleString=="long").map(x => {
+                  val methodX = ru.typeOf[Row].declaration(ru.newTermName("get")).asMethod
+                  val thevalue = instanceMirror.reflectMethod(methodX)(x._2)
+                  if(thevalue==null) 0.0 else thevalue.asInstanceOf[Long].toDouble
+              }).toSeq
               
-              val label = fsValue.head
-              val features = Vectors.dense(fsValue.tail.head, fsValue.tail.tail:_*)
+              val vectors = fsValue ++ fsValueInt ++ fsValueLong
+              val label = vectors.head
+              val fvector = vectors.tail
+              val features = Vectors.dense(fvector.head, fvector.tail:_*)
               LabeledPoint(
                 label, features
               )
@@ -262,12 +274,11 @@ case class MLGenetor(
         import scala.reflect.runtime.{universe => ru}
         val fs = dataset.schema.fields
         val datasetDF = dataset.rdd.map { row => 
-              val fsValue = fs.zipWithIndex.filter(x=>x._1.dataType.simpleString=="string").map(x => {
+              val fsValue = fs.zipWithIndex.filter(x=>x._1.dataType.simpleString=="int").map(x => {
                   val thevalue = row.get(x._2)
-                  if(thevalue==null) "" else thevalue.asInstanceOf[String]
-              }).toArray
-              val text = fsValue.head
-              (text, row.getAs[Int]("superzip"))
+                  if(thevalue==null) 0 else thevalue.asInstanceOf[Int]
+              }).toSeq
+              (fsValue.tail.mkString(" "), fsValue.head%2)
          }.toDF("text", "label")
          
          //datasetDF.show
