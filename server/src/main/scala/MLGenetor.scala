@@ -260,7 +260,17 @@ case class MLGenetor(
           .setLabelCol("label")
           .setPredictionCol("prediction")
           .setMetricName("rmse")
-        val rmse = evaluator.evaluate(predictions)
+        
+        var rmse = 0.0
+        try {
+          rmse = evaluator.evaluate(predictions)
+        }
+        catch {
+            case t: Throwable => println(s"-----${t.printStackTrace()}--------")
+        }
+        finally{
+            rmse = 0.0
+        }
         
         //val treeModel = model.stages(1).asInstanceOf[DecisionTreeRegressionModel]
         //println("Learned regression tree model:\n" + treeModel.toDebugString)
