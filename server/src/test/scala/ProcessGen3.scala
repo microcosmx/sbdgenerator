@@ -157,7 +157,10 @@ class ProcessGen3 extends FlatSpec with Matchers with BeforeAndAfterAll with Tes
             
             
             val mseAvg = mlgen.decisionTreeMSE(transDS)
-            println("Root Mean Squared Error (RMSE) on data set = " + mseAvg)
+            val mseAvg2 = mlgen.decisionPipline(transDS)
+            println(s"Root Mean Squared Error (RMSE) on data set = $mseAvg, $mseAvg2")
+            val mse = (mseAvg+mseAvg2)/2
+            println(mse)
             
             
             //persist

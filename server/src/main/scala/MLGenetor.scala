@@ -1,5 +1,6 @@
-//import java.lang._
 import scala._
+import scala.util._
+
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd._
 import org.apache.spark.sql._
@@ -37,6 +38,9 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 case class MLGenetor(
     spark: SparkSession)
 {
+  
+    import spark.implicits._
+    import org.apache.spark.sql.catalyst.encoders.{OuterScopes, RowEncoder}
     
     def mlpipline() = {
       
@@ -217,7 +221,7 @@ case class MLGenetor(
               )
          }
         
-        var data = spark.createDataFrame(datasetRDD)
+        var data = spark.createDataset(datasetRDD)//(Encoders.kryo[LabeledPoint])
         
         val featureIndexer = new VectorIndexer()
           .setInputCol("features")
@@ -249,6 +253,51 @@ case class MLGenetor(
         //val treeModel = model.stages(1).asInstanceOf[DecisionTreeRegressionModel]
         //println("Learned regression tree model:\n" + treeModel.toDebugString)
         
+        rmse
+    }
+    
+    
+    def decisionPipline(dataset: Dataset[Row]) = {
+        
+        import scala.reflect.runtime.{universe => ru}
+        val fs = dataset.schema.fields
+        val datasetDF = dataset.rdd.map { row => 
+              val fsValue = fs.zipWithIndex.filter(x=>x._1.dataType.simpleString=="string").map(x => {
+                  val thevalue = row.get(x._2)
+                  if(thevalue==null) "" else thevalue.asInstanceOf[String]
+              }).toArray
+              val text = fsValue.head
+              (text, row.getAs[Int]("superzip"))
+         }.toDF("text", "label")
+         
+         //datasetDF.show
+        
+        var data = datasetDF
+        
+        // Configure an ML pipeline, which consists of three stages: tokenizer, hashingTF, and lr.
+        val tokenizer = new Tokenizer()
+          .setInputCol("text")
+          .setOutputCol("words")
+        val hashingTF = new HashingTF()
+          .setNumFeatures(1000)
+          .setInputCol(tokenizer.getOutputCol)
+          .setOutputCol("features")
+        val lr = new LogisticRegression()
+          .setMaxIter(100)
+          .setRegParam(0.01)
+        val pipeline = new Pipeline()
+          .setStages(Array(tokenizer, hashingTF, lr))
+        
+        val Array(trainingData, testData) = data.randomSplit(Array(0.7, 0.3))
+        val model = pipeline.fit(trainingData)
+        val predictions = model.transform(testData)
+        
+        val evaluator = new RegressionEvaluator()
+          .setLabelCol("label")
+          .setPredictionCol("prediction")
+          .setMetricName("rmse")
+        val rmse = evaluator.evaluate(predictions)
+        println("RMSE: " + rmse)
         rmse
     }
   

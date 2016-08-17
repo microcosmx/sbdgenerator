@@ -173,9 +173,12 @@ object GA {
     
     //代入函数得出适应度值
     val mseAvg = mlgen.decisionTreeMSE(transDS)
-    println("Root Mean Squared Error (RMSE) on data set = " + mseAvg)
+    val mseAvg2 = mlgen.decisionPipline(transDS)
+    println(s"Root Mean Squared Error (RMSE) on data set = $mseAvg, $mseAvg2")
+    val mse = (mseAvg+mseAvg2)/2
+    println(mse)
     
-    mseAvg
+    mse
     
   }
    

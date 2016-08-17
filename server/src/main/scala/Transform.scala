@@ -125,8 +125,25 @@ case class Transform(
     def trans5(data: Dataset[Row], indexs: Seq[Int]) = {
       val features = data.schema.fields
       val featureNames = indexs.map(x=>features(x).name)
-      println(s"-----trans5--sort--${featureNames}-----")
-      data.sort(featureNames(0), featureNames.tail:_*)
+      val featuresLeft = features.filterNot(x=>featureNames contains x.name)
+      println(s"-----trans5--cube--${featureNames}-----")
+      val aggCols = featuresLeft.map(x=>{
+            if(x.dataType.simpleString == "string"){
+              count(x.name) as x.name
+            }else if(x.dataType.simpleString == "int"){
+              min(x.name) as x.name
+            }else if(x.dataType.simpleString == "long"){
+              max(x.name) as x.name
+            }else if(x.dataType.simpleString == "int"){
+              sum(x.name) as x.name
+            }else{
+              count(x.name) as x.name
+            }
+        })
+      data.groupBy(featureNames.head, featureNames.tail:_*)
+        .agg(aggCols.head, aggCols.tail:_*)
+        //.min(featureNamesLeft:_*)
+      //data.sort(featureNames(0), featureNames.tail:_*)
     }
     
 }
