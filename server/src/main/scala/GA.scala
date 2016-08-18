@@ -109,13 +109,13 @@ object GA {
   println(s"----------$length")
    
   //迭代次数，最大子代数
-  val MAX_GENERATION = 10
+  val MAX_GENERATION = 2
    
   //种群大小
-  val POPULATION_SIZE = 10
+  val POPULATION_SIZE = 2
    
   //变异概率
-  val MUTATION_RATE = 0.01 
+  val MUTATION_RATE = 0.1 
    
   /**
    * 染色体
@@ -150,23 +150,7 @@ object GA {
     }
     */
     
-    var transDS = superzipDS//.filter(x => {x.getInt(0) > 1100}).sort(features(0).name)
-    var handler = Seq[Tuple2[String, Seq[Int]]]()
-  
-    for(x <- transNames.zipWithIndex){
-      var transIdx = Seq[Int]()
-      for(y <- 0 to features.length-1){
-        if(sequence(x._2*10 + y) > 0){
-          transIdx :+= y
-        }
-      }
-      handler :+= (x._1, transIdx)
-    }
-    
-    handler.foreach(x => {
-      val methodx = ru.typeOf[Transform].declaration(ru.newTermName(x._1)).asMethod
-      transDS = instanceMirror.reflectMethod(methodx)(transDS, x._2).asInstanceOf[Dataset[Row]]
-    })
+    var transDS = dataTransformProcess(sequence)
     
     //transDS.printSchema()
     //transDS.show()
@@ -180,6 +164,28 @@ object GA {
     
     mse
     
+  }
+  
+  def dataTransformProcess(sequence: Array[Int]) = {
+      var transDS = superzipDS
+      var handler = Seq[Tuple2[String, Seq[Int]]]()
+    
+      for(x <- transNames.zipWithIndex){
+        var transIdx = Seq[Int]()
+        for(y <- 0 to features.length-1){
+          if(sequence(x._2*10 + y) > 0){
+            transIdx :+= y
+          }
+        }
+        handler :+= (x._1, transIdx)
+      }
+      
+      handler.foreach(x => {
+        val methodx = ru.typeOf[Transform].declaration(ru.newTermName(x._1)).asMethod
+        transDS = instanceMirror.reflectMethod(methodx)(transDS, x._2).asInstanceOf[Dataset[Row]]
+      })
+      
+      transDS
   }
    
   import scala.collection.mutable.PriorityQueue

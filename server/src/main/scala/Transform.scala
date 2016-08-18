@@ -52,7 +52,7 @@ case class Transform(
       val fNames = features.zipWithIndex.filter(x=>x._2 != filterColIdx).map(_._1.name).toSeq
       println(s"-----trans2--filter columns--${fNames}-----")
       data.select(fNames.head, fNames.tail:_*)
-        .withColumn("extra_column1", lit(0))
+        .withColumn(features(filterColIdx).name, lit(0))
     }
     
     def trans3(data: Dataset[Row], indexs: Seq[Int]) = {
