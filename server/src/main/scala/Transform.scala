@@ -49,10 +49,9 @@ case class Transform(
       val features = data.schema.fields
       val featureNames = indexs.map(x=>features(x).name)
       val filterColIdx = Random.nextInt(features.length)
-      val fNames = features.zipWithIndex.filter(x=>x._2 != filterColIdx).map(_._1.name).toSeq
-      println(s"-----trans2--filter columns--${fNames}-----")
-      data.select(fNames.head, fNames.tail:_*)
-        .withColumn(features(filterColIdx).name, lit(0))
+      println(s"-----trans2--filter columns--${features(filterColIdx).name}-----")
+      data.drop(features(filterColIdx).name)
+        .withColumn(features(filterColIdx).name, lit(Random.nextInt(100)))
     }
     
     def trans3(data: Dataset[Row], indexs: Seq[Int]) = {
@@ -125,25 +124,30 @@ case class Transform(
     def trans5(data: Dataset[Row], indexs: Seq[Int]) = {
       val features = data.schema.fields
       val featureNames = indexs.map(x=>features(x).name)
-      val featuresLeft = features.filterNot(x=>featureNames contains x.name)
       println(s"-----trans5--cube--${featureNames}-----")
-      val aggCols = featuresLeft.map(x=>{
-            if(x.dataType.simpleString == "string"){
-              count(x.name) as x.name
-            }else if(x.dataType.simpleString == "int"){
-              min(x.name) as x.name
-            }else if(x.dataType.simpleString == "long"){
-              max(x.name) as x.name
-            }else if(x.dataType.simpleString == "int"){
-              sum(x.name) as x.name
-            }else{
-              count(x.name) as x.name
-            }
-        })
-      data.groupBy(featureNames.head, featureNames.tail:_*)
-        .agg(aggCols.head, aggCols.tail:_*)
-        //.min(featureNamesLeft:_*)
-      //data.sort(featureNames(0), featureNames.tail:_*)
+      if(featureNames.length > 0){
+          val featuresLeft = features.filterNot(x=>featureNames contains x.name)
+          val aggCols = featuresLeft.map(x=>{
+                if(x.dataType.simpleString == "string"){
+                  count(x.name) as x.name
+                }else if(x.dataType.simpleString == "int"){
+                  min(x.name) as x.name
+                }else if(x.dataType.simpleString == "long"){
+                  max(x.name) as x.name
+                }else if(x.dataType.simpleString == "int"){
+                  sum(x.name) as x.name
+                }else{
+                  count(x.name) as x.name
+                }
+            })
+          data.groupBy(featureNames.head, featureNames.tail:_*)
+            .agg(aggCols.head, aggCols.tail:_*)
+            //.min(featureNamesLeft:_*)
+      }else{
+          data.sort(features.head.name, features.tail.map(_.name):_*)
+      }
+      //skip this step
+      data
     }
     
 }

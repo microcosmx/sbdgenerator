@@ -109,10 +109,10 @@ object GA {
   println(s"----------$length")
    
   //迭代次数，最大子代数
-  val MAX_GENERATION = 2
+  val MAX_GENERATION = 5
    
   //种群大小
-  val POPULATION_SIZE = 2
+  val POPULATION_SIZE = 5
    
   //变异概率
   val MUTATION_RATE = 0.1 

@@ -164,10 +164,21 @@ class ProcessGen3 extends FlatSpec with Matchers with BeforeAndAfterAll with Tes
             
             
             //persist
+            //transDS = transDS.limit(100)
             import HadoopConversions._
             val writeRDD = sc.makeRDD(Seq(transDS.schema.fieldNames.mkString(","))) ++
                               transDS.map(row=>row.mkString(",")).rdd
             env.fs.writeFileRDD(writeRDD, "data2/trans.csv")
+            
+            
+            //Rscript
+            import scala.sys.process._
+            val command = Seq(
+                "Rscript",
+                "plot.R")
+            println(s"R command: ${command.mkString(" ")}")
+            val exitCode = blocking { command.! }
+            require(exitCode == 0, s"R exited with code $exitCode")
 
             
         }
