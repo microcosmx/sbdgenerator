@@ -135,16 +135,20 @@ class ProcessGen3 extends FlatSpec with Matchers with BeforeAndAfterAll with Tes
             transDS.show()
             
             val features = superzipDS.schema.fields
+            
+            val length = features.length * transNames.length
+            val sequence = Array.fill(length)(0).map(x => x ^ Random.nextInt(2))
+            
             var handler = Seq[Tuple2[String, Seq[Int]]]()
             
-            for(x <- transNames){
+            for(x <- transNames.zipWithIndex){
               var transIdx = Seq[Int]()
               for(y <- 0 to features.length-1){
-                if(Random.nextInt(2) > 0){
+                if(sequence(x._2*10 + y) > 0){
                   transIdx :+= y
                 }
               }
-              handler :+= (x, transIdx)
+              handler :+= (x._1, transIdx)
             }
             
             handler.foreach(x => {
@@ -166,6 +170,13 @@ class ProcessGen3 extends FlatSpec with Matchers with BeforeAndAfterAll with Tes
             //persist
             //transDS = transDS.limit(100)
             import HadoopConversions._
+            
+            val contentHeader = ("transform" +: transDS.schema.fieldNames).mkString(",")
+            val content = sequence.sliding(10, 10).zipWithIndex.map { seq10 => 
+                (transNames(seq10._2) +: seq10._1.map(_.toString)).mkString(",")
+            }.toSeq
+            env.fs.saveAsTextFile("data2/process.csv", contentHeader +: content)
+            
             val writeRDD = sc.makeRDD(Seq(transDS.schema.fieldNames.mkString(","))) ++
                               transDS.map(row=>row.mkString(",")).rdd
             env.fs.writeFileRDD(writeRDD, "data2/trans.csv")

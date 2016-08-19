@@ -194,16 +194,13 @@ object GA {
     def compare(x: Chromosome, y: Chromosome) = y.fitness.compare(x.fitness)
   }
    
-  import java.util.Random
-  val random = new Random
-   
   /**
    * 初始化种群
    */
   def initPopulation(calFitness: Array[Int] => Double) = {
     val population = new PriorityQueue[Chromosome]
     for(i <- 0 until POPULATION_SIZE) {
-      val sequence = Array.fill(length)(0).map(x => x ^ random.nextInt(2))
+      val sequence = Array.fill(length)(0).map(x => x ^ Random.nextInt(2))
       population += Chromosome(sequence, calFitness(sequence))
     }
     population
@@ -228,7 +225,7 @@ object GA {
     //随机获取配偶的位置
     //po1为当前染色体的位置
     def getSpouse(po1: Int, population_size: Int): Int = {
-      val spouse = random nextInt population_size
+      val spouse = Random nextInt population_size
       if(spouse == po1) getSpouse(po1, population_size)
       else spouse
     }
@@ -251,7 +248,7 @@ object GA {
    */
   def CrossOver(chromOne: Chromosome, chromTwo: Chromosome,
                calFitness: Array[Int] => Double) = {
-    val position = random nextInt length - 1
+    val position = Random nextInt length - 1
     val seqOne =
       chromOne.sequence.take(position + 1) ++ 
       chromTwo.sequence.takeRight(length - position)
@@ -270,9 +267,9 @@ object GA {
    def Mutation(chrom: Chromosome, 
                 calFitness: Array[Int] => Double) =
      //首先满足变异概率
-     if(random.nextDouble > MUTATION_RATE){
+     if(Random.nextDouble > MUTATION_RATE){
           var seq = chrom.sequence
-          val po = random nextInt length
+          val po = Random nextInt length
           seq(po) = seq(po) ^ 1
           //若变异后适应值比原来大则不变异
           if(calFitness(seq) > calFitness(chrom.sequence))
