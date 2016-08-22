@@ -47,7 +47,7 @@ import org.apache.spark.sql.types._
 
 import akka.testkit.TestKitBase
 
-class ProcessGen_ML extends FlatSpec with Matchers with BeforeAndAfterAll with TestKitBase {
+class ProcessGen_Stats extends FlatSpec with Matchers with BeforeAndAfterAll with TestKitBase {
 
     implicit lazy val system = ActorSystem()
     implicit val timeout: Timeout = 1.minute
@@ -108,10 +108,7 @@ class ProcessGen_ML extends FlatSpec with Matchers with BeforeAndAfterAll with T
         val env = Env(system, cfg, fs, jdbc, ml, sc, sqlContext)
         
         val trans = Transform(spark)
-        val mlgen = MLGenetor(spark)
-        val mlreg = MLRegression(spark)
-        
-        val mlcls = MLClustering(spark)
+        val mlstat = StatGenetor(spark)
         
 
         try{
@@ -119,32 +116,13 @@ class ProcessGen_ML extends FlatSpec with Matchers with BeforeAndAfterAll with T
             import env.sqlContext.implicits._
             
             
-//            mlgen.mlpipline()
-//            mlgen.mlPipline2()
-//            mlgen.modelselection()
-//            mlgen.decisiontree()
-//            mlgen.randomforest()
-//            mlgen.Gradientboostedtree()
-//            mlgen.Multilayer_perceptron_classifier()
-//            mlgen.One_vs_Rest_classifier()
-//            mlgen.Naive_Bayes()
-            
-//            mlreg.linear()
-//            mlreg.GeneralizedLinearRegression()
-//            mlreg.dtree()
-//            mlreg.randomforest()
-//            mlreg.Gradient_boosted_tree()
-//            mlreg.Survival_regression()
-//            mlreg.Isotonic_regression()
-            
-//            mlcls.K_means()
-//            mlcls.Latent_Dirichlet_allocation()
-//            mlcls.Bisecting_k_means()
-//            mlcls.Gaussian_Mixture_Model()
-            mlcls.Collaborative_filtering()
-            
-            
-            
+//            mlstat.statCols()
+//            mlstat.Correlations()
+//            mlstat.sampling()
+//            mlstat.Hypothesis_testing()
+//            mlstat.Hypothesis_testing2()
+//            mlstat.randomData()
+            mlstat.Kernel_density_estimation()
             
             
         }
