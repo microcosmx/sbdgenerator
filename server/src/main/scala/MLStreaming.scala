@@ -56,10 +56,10 @@ case class MLStreaming(
         import org.apache.spark.mllib.regression.LabeledPoint
         import org.apache.spark.streaming.{Seconds, StreamingContext}
         
-        val ssc = new StreamingContext(sc, Seconds(1))
+        val ssc = new StreamingContext(sc, Seconds(10))
         
-        val trainingData = ssc.textFileStream("data/mllib/sample_kmeans_data.txt").map(Vectors.parse)
-        val testData = ssc.textFileStream("data/mllib/sample_kmeans_data_2.txt").map(LabeledPoint.parse)
+        val trainingData = ssc.textFileStream("data/mllib/streaming").map(Vectors.parse)
+        val testData = ssc.textFileStream("data/mllib/streaming").map(LabeledPoint.parse)
         
         val model = new StreamingKMeans()
           .setK(2)

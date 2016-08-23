@@ -38,7 +38,7 @@ import org.apache.spark.sql.types.{StructType,StructField,StringType}
 import akka.testkit.TestKitBase
 import org.apache.spark.repl._
 
-class Streaming_ML extends FlatSpec with Matchers with BeforeAndAfterAll with TestKitBase {
+class Streaming_ML2 extends FlatSpec with Matchers with BeforeAndAfterAll with TestKitBase {
 
     implicit lazy val system = ActorSystem()
     implicit val timeout: Timeout = 1.minute
@@ -96,14 +96,8 @@ class Streaming_ML extends FlatSpec with Matchers with BeforeAndAfterAll with Te
         try{
             import env.sqlContext.implicits._
             
-            val ssc = new StreamingContext(sc, Seconds(5))
-            val data = ssc.textFileStream("data_stream")
-            //add file with content in "data_stream" folder to see the DStream data
+            mls.Streaming_k_means()
             
-            data.print()
-            
-            ssc.start()
-            ssc.awaitTermination()
             
         } catch {
               case t: Throwable =>

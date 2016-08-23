@@ -78,7 +78,7 @@ object StreamingTestExample {
     }
 
   def main(args: Array[String]) {
-    val dataDir = "data" //args(0)
+    val dataDir = "data_stream" //args(0)
     val batchDuration = Seconds(5) //Seconds(args(1).toLong)
     val numBatchesTimeout = 100//args(2).toInt
 
@@ -93,6 +93,7 @@ object StreamingTestExample {
     // $example on$
     val data = ssc.textFileStream(dataDir).map(line => {
       println("-------content--------")
+      println(line)
       line.split(",") match {
         case Array(label, value) => BinarySample(label.toBoolean, value.toDouble)
       }
@@ -111,7 +112,6 @@ object StreamingTestExample {
       .setTestMethod("welch")
 
     val out = streamingTest.registerStream(data)
-    println("-------out---------")
     out.print()
     // $example off$
 
