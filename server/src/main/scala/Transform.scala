@@ -147,7 +147,7 @@ case class Transform(
           data.sort(features.head.name, features.tail.map(_.name):_*)
       }
       //skip this step
-      data
+      data.sort(features.head.name, features.tail.map(_.name):_*)
     }
     
 }

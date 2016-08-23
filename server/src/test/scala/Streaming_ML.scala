@@ -34,20 +34,11 @@ import org.apache.spark.mllib.evaluation.BinaryClassificationMetrics
 import org.apache.spark.mllib.util.MLUtils
 import org.apache.spark.{SparkContext, SparkConf}
 import org.apache.spark.sql.SQLContext
-import org.apache.spark.sql.types.{StructType,StructField,StringType};
-
-import org.apache.spark.SparkException
-import org.apache.spark.sql.catalyst.plans.logical.{OneRowRelation, Union}
-import org.apache.spark.sql.execution.QueryExecution
-import org.apache.spark.sql.execution.aggregate.HashAggregateExec
-import org.apache.spark.sql.execution.exchange.{BroadcastExchangeExec, ReusedExchangeExec, ShuffleExchange}
-import org.apache.spark.sql.functions._
-import org.apache.spark.sql.internal.SQLConf
-import org.apache.spark.sql.types._
-
+import org.apache.spark.sql.types.{StructType,StructField,StringType}
 import akka.testkit.TestKitBase
+import org.apache.spark.repl._
 
-class ProcessGen_ML extends FlatSpec with Matchers with BeforeAndAfterAll with TestKitBase {
+class Streaming_ML extends FlatSpec with Matchers with BeforeAndAfterAll with TestKitBase {
 
     implicit lazy val system = ActorSystem()
     implicit val timeout: Timeout = 1.minute
@@ -88,15 +79,9 @@ class ProcessGen_ML extends FlatSpec with Matchers with BeforeAndAfterAll with T
     }
 
     override def afterAll() {
-        spark.stop()
         sc.stop()
         fs.close()
         system.shutdown()
-    }
-    
-    def reflectTest() = {
-      println("--------reflect----------")
-      "reflect success"
     }
 
     it should "run it" in {
@@ -105,63 +90,18 @@ class ProcessGen_ML extends FlatSpec with Matchers with BeforeAndAfterAll with T
         val jdbc = null
         val ml = MLSample(sc,sqlContext)
         val ss = SStream(sc)
+        val mls = MLStreaming(spark)
         val env = Env(system, cfg, fs, jdbc, ml, sc, sqlContext)
-        
-        val trans = Transform(spark)
-        val mlgen = MLGenetor(spark)
-        val mlreg = MLRegression(spark)
-        
-        val mlcls = MLClustering(spark)
-        val mllib = MLLibGenerator(spark)
-        
 
         try{
-            import scala.util._
             import env.sqlContext.implicits._
             
+            mls.Streaming_k_means()
             
-//            mlgen.mlpipline()
-//            mlgen.mlPipline2()
-//            mlgen.modelselection()
-//            mlgen.decisiontree()
-//            mlgen.randomforest()
-//            mlgen.Gradientboostedtree()
-//            mlgen.Multilayer_perceptron_classifier()
-//            mlgen.One_vs_Rest_classifier()
-//            mlgen.Naive_Bayes()
-            
-//            mlreg.linear()
-//            mlreg.GeneralizedLinearRegression()
-//            mlreg.dtree()
-//            mlreg.randomforest()
-//            mlreg.Gradient_boosted_tree()
-//            mlreg.Survival_regression()
-//            mlreg.Isotonic_regression()
-            
-//            mlcls.K_means()
-//            mlcls.Latent_Dirichlet_allocation()
-//            mlcls.Bisecting_k_means()
-//            mlcls.Gaussian_Mixture_Model()
-//            mlcls.Collaborative_filtering()
-            
-//            mllib.SVMs()
-//            mllib.SVD_Example()
-//            mllib.Principal_component_analysis()
-//            mllib.Principal_component_analysis_2()
-//            mllib.FP_growth()
-//            mllib.Association_Rules()
-            mllib.PrefixSpan()
-            
-            
-            
-            
-            
-            
-        }
-        catch {
-            case t: Throwable =>
-                t.printStackTrace()
-        }
+        } catch {
+              case t: Throwable =>
+                  t.printStackTrace()
+          }
     }
 
 
