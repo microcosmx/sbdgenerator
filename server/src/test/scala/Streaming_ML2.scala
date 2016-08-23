@@ -38,6 +38,14 @@ import org.apache.spark.sql.types.{StructType,StructField,StringType}
 import akka.testkit.TestKitBase
 import org.apache.spark.repl._
 
+
+import org.apache.spark.mllib.linalg.{Vector, Vectors}
+import org.apache.spark.streaming._
+import org.apache.spark.streaming.dstream.DStream
+import org.apache.spark.util.random.XORShiftRandom
+
+
+
 class Streaming_ML2 extends FlatSpec with Matchers with BeforeAndAfterAll with TestKitBase {
 
     implicit lazy val system = ActorSystem()
@@ -83,7 +91,7 @@ class Streaming_ML2 extends FlatSpec with Matchers with BeforeAndAfterAll with T
         fs.close()
         system.shutdown()
     }
-
+    
     it should "run it" in {
         val cfg = new Config("conf/server.properties")
         
@@ -96,7 +104,30 @@ class Streaming_ML2 extends FlatSpec with Matchers with BeforeAndAfterAll with T
         try{
             import env.sqlContext.implicits._
             
-            mls.Streaming_k_means()
+            
+            import org.apache.spark.mllib.clustering.StreamingKMeans
+            import org.apache.spark.mllib.linalg.Vectors
+            import org.apache.spark.mllib.regression.LabeledPoint
+            import org.apache.spark.streaming.{Seconds, StreamingContext}
+            
+            val ssc = new StreamingContext(sc, Seconds(30))
+            
+            //add "streaming_kmeans_data" data into "data/mllib/streaming" folder
+            val trainingData = ssc.textFileStream("data/mllib/streaming1").map(Vectors.parse)
+            val testData = ssc.textFileStream("data/mllib/streaming2").map(LabeledPoint.parse)
+            trainingData.print()
+            testData.print()
+            
+            val model = new StreamingKMeans()
+              .setK(2)
+              .setDecayFactor(1.0)
+              .setRandomCenters(3, 0.0)
+            
+            model.trainOn(trainingData)
+            model.predictOnValues(testData.map(lp => (lp.label, lp.features))).print()
+            
+            ssc.start()
+            ssc.awaitTermination()
             
             
         } catch {
