@@ -47,7 +47,7 @@ import org.apache.spark.sql.types._
 
 import akka.testkit.TestKitBase
 
-class ProcessGen_ML extends FlatSpec with Matchers with BeforeAndAfterAll with TestKitBase {
+class ProcessGen_MLTrans extends FlatSpec with Matchers with BeforeAndAfterAll with TestKitBase {
 
     implicit lazy val system = ActorSystem()
     implicit val timeout: Timeout = 1.minute
@@ -108,11 +108,10 @@ class ProcessGen_ML extends FlatSpec with Matchers with BeforeAndAfterAll with T
         val env = Env(system, cfg, fs, jdbc, ml, sc, sqlContext)
         
         val trans = Transform(spark)
-        val mlgen = MLGenetor(spark)
-        val mlreg = MLRegression(spark)
+        val mltransE = MLFeatureExtractor(spark)
         
-        val mlcls = MLClustering(spark)
-        val mllib = MLLibGenerator(spark)
+        val mltransT = MLFeatureTransform(spark)
+        val mltransS = MLFeatureSelector(spark)
         
 
         try{
@@ -120,39 +119,34 @@ class ProcessGen_ML extends FlatSpec with Matchers with BeforeAndAfterAll with T
             import env.sqlContext.implicits._
             
             
-//            mlgen.mlpipline()
-//            mlgen.mlPipline2()
-//            mlgen.modelselection()
-//            mlgen.decisiontree()
-//            mlgen.randomforest()
-//            mlgen.Gradientboostedtree()
-//            mlgen.Multilayer_perceptron_classifier()
-//            mlgen.One_vs_Rest_classifier()
-//            mlgen.Naive_Bayes()
+//            mltransE.TF_IDF()
+//            mltransE.Word2Vec()
+//            mltransE.CountVectorizer()
             
-//            mlreg.linear()
-//            mlreg.GeneralizedLinearRegression()
-//            mlreg.dtree()
-//            mlreg.randomforest()
-//            mlreg.Gradient_boosted_tree()
-//            mlreg.Survival_regression()
-//            mlreg.Isotonic_regression()
+//            mltransT.Tokenizer()
+//            mltransT.StopWordsRemover()
+//            mltransT.n_gram()
+//            mltransT.Binarizer()
+//            mltransT.PCA()
+//            mltransT.PolynomialExpansion()
+//            mltransT.DCT()
+//            mltransT.StringIndexer()
+//            mltransT.IndexToString()
+//            mltransT.OneHotEncoder()
+//            mltransT.VectorIndexer()
+//            mltransT.Normalizer()
+//            mltransT.StandardScaler()
+//            mltransT.MinMaxScaler()
+//            mltransT.MaxAbsScaler()
+//            mltransT.Bucketizer()
+//            mltransT.ElementwiseProduct()
+//            mltransT.SQLTransformer()
+//            mltransT.VectorAssembler()
+//            mltransT.QuantileDiscretizer()
             
-//            mlcls.K_means()
-//            mlcls.Latent_Dirichlet_allocation()
-//            mlcls.Bisecting_k_means()
-//            mlcls.Gaussian_Mixture_Model()
-//            mlcls.Collaborative_filtering()
-            
-//            mllib.Linear_least_squares()
-            mllib.lasso()
-//            mllib.SVMs()
-//            mllib.SVD_Example()
-//            mllib.Principal_component_analysis()
-//            mllib.Principal_component_analysis_2()
-//            mllib.FP_growth()
-//            mllib.Association_Rules()
-//            mllib.PrefixSpan()
+//            mltransS.VectorSlicer()
+//            mltransS.RFormula()
+            mltransS.ChiSqSelector()
             
             
             

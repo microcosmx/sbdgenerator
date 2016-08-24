@@ -16,7 +16,7 @@
  */
 
 // scalastyle:off println
-package org.apache.spark.examples.mllib
+package streaming
 
 import org.apache.spark.SparkConf
 import org.apache.spark.mllib.linalg.Vectors

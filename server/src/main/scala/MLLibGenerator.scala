@@ -51,6 +51,74 @@ case class MLLibGenerator(
     import spark.implicits._
     import org.apache.spark.sql.catalyst.encoders.{OuterScopes, RowEncoder}
     
+    def Linear_least_squares() = {
+        import org.apache.spark.mllib.linalg.Vectors
+        import org.apache.spark.mllib.regression.LabeledPoint
+        import org.apache.spark.mllib.regression.LinearRegressionModel
+        import org.apache.spark.mllib.regression.LinearRegressionWithSGD
+        
+        // Load and parse the data
+        val data = sc.textFile("data/mllib/ridge-data/lpsa.data")
+        val parsedData = data.map { line =>
+          val parts = line.split(',')
+          LabeledPoint(parts(0).toDouble, Vectors.dense(parts(1).split(' ').map(_.toDouble)))
+        }.cache()
+        
+        // Building the model
+        val numIterations = 100
+        val stepSize = 0.00000001
+        val model = LinearRegressionWithSGD.train(parsedData, numIterations, stepSize)
+        
+        // Evaluate model on training examples and compute training error
+        val valuesAndPreds = parsedData.map { point =>
+          val prediction = model.predict(point.features)
+          (point.label, prediction)
+        }
+        val MSE = valuesAndPreds.map{ case(v, p) => math.pow((v - p), 2) }.mean()
+        println("training Mean Squared Error = " + MSE)
+        
+        valuesAndPreds.toDS().show()
+        
+        // Save and load model
+        //model.save(sc, "target/tmp/scalaLinearRegressionWithSGDModel")
+        //val sameModel = LinearRegressionModel.load(sc, "target/tmp/scalaLinearRegressionWithSGDModel")
+    }
+    
+    def lasso() = {
+        import org.apache.spark.mllib.linalg.Vectors
+        import org.apache.spark.mllib.regression.LabeledPoint
+        import org.apache.spark.mllib.regression.LinearRegressionModel
+        import org.apache.spark.mllib.regression._
+        
+        // Load and parse the data
+        val data = sc.textFile("data/mllib/ridge-data/lpsa.data")
+        val parsedData = data.map { line =>
+          val parts = line.split(',')
+          LabeledPoint(parts(0).toDouble, Vectors.dense(parts(1).split(' ').map(_.toDouble)))
+        }.cache()
+        
+        // Building the model
+        val numIterations = 100
+        val stepSize = 0.00000001
+        val ls = new LassoWithSGD()
+        ls.optimizer.setStepSize(stepSize).setRegParam(0.01).setNumIterations(numIterations)
+        val model = ls.run(parsedData)
+        
+        // Evaluate model on training examples and compute training error
+        val valuesAndPreds = parsedData.map { point =>
+          val prediction = model.predict(point.features)
+          (point.label, prediction)
+        }
+        val MSE = valuesAndPreds.map{ case(v, p) => math.pow((v - p), 2) }.mean()
+        println("training Mean Squared Error = " + MSE)
+        
+        valuesAndPreds.toDS().show()
+        
+        // Save and load model
+        //model.save(sc, "target/tmp/scalaLinearRegressionWithSGDModel")
+        //val sameModel = LinearRegressionModel.load(sc, "target/tmp/scalaLinearRegressionWithSGDModel")
+    }
+    
     def SVMs() = {
         import org.apache.spark.mllib.classification.{SVMModel, SVMWithSGD}
         import org.apache.spark.mllib.evaluation.BinaryClassificationMetrics
