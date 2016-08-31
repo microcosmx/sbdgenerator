@@ -60,40 +60,6 @@ object Main extends App {
         val ss = SStream(sc)
         val env = Env(system, cfg, fs, jdbc, ml, sc, sqlContext)
         
-        
-        //spark related processing sample
-        import env.sqlContext.implicits._
-        val a_rdd = sc.parallelize(Array(1,2,3,4,5))
-        println("-----------rdd.count-------------: " + a_rdd.count)
-        val nDF = a_rdd.toDF  //.toDF("numberKey")
-        nDF.registerTempTable("ntable")
-        sqlContext.cacheTable("ntable")
-        
-        val textFile = sc.textFile("data/attributes.txt")
-        println("---------textFile.count---------------: " + textFile.count)
-        println(textFile.first)
-        val word_count = textFile.flatMap(line => line.split(",")).map(word => (word, 1)).reduceByKey(_+_)
-        println(word_count.collect) 
-        val tDF = Utils.makeDF(sc, sqlContext, "attributes.txt")
-        tDF.registerTempTable("pltable")
-        sqlContext.cacheTable("pltable")
-        val tDF2 = sqlContext.sql("select * from pltable")
-        
-        println("---------dataframe---------------: ")
-        tDF.show()
-        tDF.printSchema()
-        tDF.select("pKey").show()
-        tDF.select(tDF("pKey"), tDF("val1") + 1).show()
-        tDF.filter(tDF("val1") > 21).show()
-        tDF.groupBy("pKey").count().show()
-        
-        //machine learning
-        ml.mlexec()
-        //ml.mlKMeans()
-        
-        //streaming
-        //ss.streamExec()
-        
         //http server actor
         system.actorOf(Props(classOf[Server], env).withRouter(RoundRobinPool(5)), name = "server")
 	      implicit val timeout = Timeout(5.seconds) // prevent dead letter when starting

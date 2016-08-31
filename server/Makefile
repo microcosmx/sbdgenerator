@@ -2,7 +2,7 @@ all: build submit
 
 jar = sbdgenerator-assembly-0.1-SNAPSHOT.jar
 args += --driver-java-options "-Dlog4j.configuration=file:conf/log4j.properties"
-args += target/scala-2.10/$(jar)
+args += target/scala-2.11/$(jar)
 
 build:
 	sbt assembly -Dsbt.log.noformat=true
