@@ -30,3 +30,13 @@ restart:
 	make stop
 	sleep 1
 	make start
+
+	
+sync: 
+	cp -r Makefile conf data data2 target/scala-2.11/$(jar) /Users/admin/1_unix_server/sbdgenerator/
+	
+submit_yarn:
+	spark-submit --master yarn --class Main $(jar)
+	
+submit_yarn_damon:
+	nohup spark-submit --master yarn --class Main $(jar) &

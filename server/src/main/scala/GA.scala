@@ -62,8 +62,8 @@ object GA {
   val conf = new org.apache.spark.SparkConf
   conf.set("spark.master", "local[*]")
   //conf.set("spark.master", "spark://192.168.20.17:7070")
-  conf.set("spark.app.name", "Aliyun")
-  conf.set("spark.ui.port", "55555")
+  conf.set("spark.app.name", "genetic")
+  //conf.set("spark.ui.port", "55555")
   conf.set("spark.default.parallelism", "10")
   conf.set("spark.sql.shuffle.partitions", "10")
   conf.set("spark.sql.shuffle.partitions", "1")
@@ -278,19 +278,19 @@ object GA {
      } else chrom
      
    
-  def main(args: Array[String]): Unit = {
-    var population =  initPopulation(CalFitnessTwo)
-    //var population =  initPopulation(CalFitnessOne)
-    var smallest = population.max.fitness
-    var temp = 0.0
-    for(i <- 0 until MAX_GENERATION){
-      population = selectChromosome(population)
-      //population = CrossOver_Mutation(population, CalFitnessOne)
-      population = CrossOver_Mutation(population, CalFitnessTwo)
-      temp = population.max.fitness
-      if(temp < smallest) smallest = temp
-    }
-    println(s"函数极值为 $smallest")
-  }
+//  def main(args: Array[String]): Unit = {
+//    var population =  initPopulation(CalFitnessTwo)
+//    //var population =  initPopulation(CalFitnessOne)
+//    var smallest = population.max.fitness
+//    var temp = 0.0
+//    for(i <- 0 until MAX_GENERATION){
+//      population = selectChromosome(population)
+//      //population = CrossOver_Mutation(population, CalFitnessOne)
+//      population = CrossOver_Mutation(population, CalFitnessTwo)
+//      temp = population.max.fitness
+//      if(temp < smallest) smallest = temp
+//    }
+//    println(s"函数极值为 $smallest")
+//  }
  
 }

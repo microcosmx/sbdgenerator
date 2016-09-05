@@ -74,6 +74,51 @@ case class Server(env:Env) extends Actor with ActorLogging with HttpService {
         path("static"/"index") {
             getFromAnyFile("static/index.html")
         } ~
+        pathPrefix("spark") {
+            val test = env.sc.makeRDD(1 to 500)
+            val count = test.count
+            respondWithMediaType(`application/json`) {
+              complete { s"rdd_count:${count}" }
+            }
+        } ~
+        pathPrefix("genetic") {
+            import GA._
+            
+            var population =  initPopulation(CalFitnessTwo)
+            
+            println(population)
+            
+            var smallest = population.head.fitness
+            var smallestPlan = population.head
+            var temp = 0.0
+            for(i <- 0 until MAX_GENERATION){
+              population = selectChromosome(population)
+              println(s"--------------gen $i----------------")
+              println(population.map(x=>x.sequence.toSeq).toSeq)
+              //population = CrossOver_Mutation(population, CalFitnessOne)
+              population = CrossOver_Mutation(population, CalFitnessTwo)
+              temp = population.head.fitness
+              if(temp < smallest) {
+                smallest = temp
+                smallestPlan = population.head
+              }
+            }
+            
+            println("--------------result----------------")
+            println(s"--transforms: ${smallestPlan.sequence.toSeq}")
+            println(s"RMSE = $smallest")
+            
+            
+            //persist
+            val result = dataTransformProcess(smallestPlan.sequence)
+            import HadoopConversions._
+            val writeRDD = spark.sparkContext.makeRDD(Seq(result.schema.fieldNames.mkString(","))) ++
+                              result.rdd.map(row=>row.mkString(","))
+            fs.writeFileRDD(writeRDD, "data2/trans.csv")
+            respondWithMediaType(`application/json`) {
+              complete { s"status: finished" }
+            }
+        } ~
         pathPrefix("dashboard"/"api") {
             path("getIds") {
                 parameters('param ? "-1") {
