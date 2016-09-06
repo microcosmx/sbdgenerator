@@ -134,7 +134,7 @@ class ProcessGen_MLTrans extends FlatSpec with Matchers with BeforeAndAfterAll w
 //            mltransT.IndexToString()
 //            mltransT.OneHotEncoder()
 //            mltransT.VectorIndexer()
-//            mltransT.Normalizer()
+            mltransT.Normalizer()
 //            mltransT.StandardScaler()
 //            mltransT.MinMaxScaler()
 //            mltransT.MaxAbsScaler()
@@ -146,7 +146,7 @@ class ProcessGen_MLTrans extends FlatSpec with Matchers with BeforeAndAfterAll w
             
 //            mltransS.VectorSlicer()
 //            mltransS.RFormula()
-            mltransS.ChiSqSelector()
+//            mltransS.ChiSqSelector()
             
             
             

@@ -221,6 +221,88 @@ case class MLRegression(
         println("Learned regression forest model:\n" + rfModel.toDebugString)
     }
     
+    def decision_Gradient_boosted_tree(dataset: Dataset[Row]) = {
+        import org.apache.spark.ml.Pipeline
+        import org.apache.spark.ml.evaluation.RegressionEvaluator
+        import org.apache.spark.ml.feature.VectorIndexer
+        import org.apache.spark.ml.regression.{GBTRegressionModel, GBTRegressor}
+        
+        import org.apache.spark.ml.feature.{IndexToString, StringIndexer, VectorIndexer}
+        import scala.reflect.runtime.{universe => ru}
+        
+        var fs = dataset.schema.fields
+        var dataset1 = dataset
+        fs.zipWithIndex.filter(x=>x._1.dataType.simpleString=="string").map(x=>{
+             val indexer = new StringIndexer()
+              .setInputCol(x._1.name)
+              .setOutputCol(x._1.name+"_index")
+            val indexed = indexer.fit(dataset1).transform(dataset1)
+            dataset1 = indexed.drop(x._1.name).withColumnRenamed(x._1.name+"_index", x._1.name)
+        })
+        fs = dataset1.schema.fields
+        
+        val datasetRDD = dataset1.rdd.map { row => 
+              val typeMirror = ru.runtimeMirror(row.getClass.getClassLoader)
+              val instanceMirror = typeMirror.reflect(row)
+              val fsValue = fs.zipWithIndex.filter(x=>x._1.dataType.simpleString=="double").map(x => {
+                  val thevalue = row.get(x._2)
+                  if(thevalue==null) 0.0 else thevalue.asInstanceOf[Double]
+              }).toSeq
+              val fsValueInt = fs.zipWithIndex.filter(x=>x._1.dataType.simpleString=="int").map(x => {
+                  val thevalue = row.get(x._2)
+                  if(thevalue==null) 0.0 else thevalue.asInstanceOf[Int].toDouble
+              }).toSeq
+              val fsValueLong = fs.zipWithIndex.filter(x=>x._1.dataType.simpleString=="long").map(x => {
+                  val thevalue = row.get(x._2)
+                  if(thevalue==null) 0.0 else thevalue.asInstanceOf[Long].toDouble
+              }).toSeq
+              
+              val vectors = fsValue ++ fsValueInt ++ fsValueLong
+              val label = vectors.head
+              val fvector = vectors.tail
+              val features = Vectors.dense(fvector.head, fvector.tail:_*)
+              LabeledPoint(
+                label, features
+              )
+         }
+        
+        var data = spark.createDataset(datasetRDD)
+        
+        import org.apache.spark.ml.feature.Normalizer
+        val normalizer = new Normalizer()
+          .setInputCol("features")
+          .setOutputCol("normFeatures")
+          .setP(1.0)
+        val l1NormData = normalizer.transform(data)
+        val normDF = l1NormData.drop("features").withColumnRenamed("normFeatures", "features")
+        
+        val featureIndexer = new VectorIndexer()
+          .setInputCol("features")
+          .setOutputCol("indexedFeatures")
+          .setMaxCategories(100)
+          .fit(normDF)
+        
+        val Array(trainingData, testData) = normDF.randomSplit(Array(0.7, 0.3))
+        
+        val gbt = new GBTRegressor()
+          .setLabelCol("label")
+          .setFeaturesCol("indexedFeatures")
+          .setMaxIter(10)
+        
+        val pipeline = new Pipeline()
+          .setStages(Array(featureIndexer, gbt))
+        
+        val model = pipeline.fit(trainingData)
+        val predictions = model.transform(testData)
+        
+        val evaluator = new RegressionEvaluator()
+          .setLabelCol("label")
+          .setPredictionCol("prediction")
+          .setMetricName("rmse")
+        val rmse = evaluator.evaluate(predictions)
+        rmse
+    }
+    
     def Gradient_boosted_tree() = {
         import org.apache.spark.ml.Pipeline
         import org.apache.spark.ml.evaluation.RegressionEvaluator

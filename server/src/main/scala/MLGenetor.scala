@@ -280,11 +280,21 @@ case class MLGenetor(
     
     
     def decisionTreeMSE(dataset: Dataset[Row]) = {
+        import org.apache.spark.ml.feature.{OneHotEncoder, StringIndexer}
         import scala.reflect.runtime.{universe => ru}
         
-        val fs = dataset.schema.fields
+        var fs = dataset.schema.fields
+        var dataset1 = dataset
+        fs.zipWithIndex.filter(x=>x._1.dataType.simpleString=="string").map(x=>{
+             val indexer = new StringIndexer()
+              .setInputCol(x._1.name)
+              .setOutputCol(x._1.name+"_index")
+            val indexed = indexer.fit(dataset1).transform(dataset1)
+            dataset1 = indexed.drop(x._1.name).withColumnRenamed(x._1.name+"_index", x._1.name)
+        })
+        fs = dataset1.schema.fields
         
-        val datasetRDD = dataset.rdd.map { row => 
+        val datasetRDD = dataset1.rdd.map { row => 
               val typeMirror = ru.runtimeMirror(row.getClass.getClassLoader)
               val instanceMirror = typeMirror.reflect(row)
               val fsValue = fs.zipWithIndex.filter(x=>x._1.dataType.simpleString=="double").map(x => {
@@ -602,6 +612,76 @@ case class MLGenetor(
         
         val gbtModel = model.stages(2).asInstanceOf[GBTClassificationModel]
         println("Learned classification GBT model:\n" + gbtModel.toDebugString)
+    }
+    
+    
+    def decision_Multilayer_perceptron_classifier(dataset: Dataset[Row]) = {
+        import org.apache.spark.ml.classification.MultilayerPerceptronClassifier
+        import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator
+        import org.apache.spark.ml.feature.{IndexToString, StringIndexer, VectorIndexer}
+        import scala.reflect.runtime.{universe => ru}
+        
+        var fs = dataset.schema.fields
+        var dataset1 = dataset
+        fs.zipWithIndex.filter(x=>x._1.dataType.simpleString=="string").map(x=>{
+             val indexer = new StringIndexer()
+              .setInputCol(x._1.name)
+              .setOutputCol(x._1.name+"_index")
+            val indexed = indexer.fit(dataset1).transform(dataset1)
+            dataset1 = indexed.drop(x._1.name).withColumnRenamed(x._1.name+"_index", x._1.name)
+        })
+        fs = dataset1.schema.fields
+        
+        val datasetRDD = dataset1.rdd.map { row => 
+              val typeMirror = ru.runtimeMirror(row.getClass.getClassLoader)
+              val instanceMirror = typeMirror.reflect(row)
+              val fsValue = fs.zipWithIndex.filter(x=>x._1.dataType.simpleString=="double").map(x => {
+                  val thevalue = row.get(x._2)
+                  if(thevalue==null) 0.0 else thevalue.asInstanceOf[Double]
+              }).toSeq
+              val fsValueInt = fs.zipWithIndex.filter(x=>x._1.dataType.simpleString=="int").map(x => {
+                  val thevalue = row.get(x._2)
+                  if(thevalue==null) 0.0 else thevalue.asInstanceOf[Int].toDouble
+              }).toSeq
+              val fsValueLong = fs.zipWithIndex.filter(x=>x._1.dataType.simpleString=="long").map(x => {
+                  val thevalue = row.get(x._2)
+                  if(thevalue==null) 0.0 else thevalue.asInstanceOf[Long].toDouble
+              }).toSeq
+              
+              val vectors = fsValue ++ fsValueInt ++ fsValueLong
+              val label = vectors.head
+              val fvector = vectors.tail
+              val features = Vectors.dense(fvector.head, fvector.tail:_*)
+              LabeledPoint(
+                label, features
+              )
+         }
+        
+        var data = spark.createDataset(datasetRDD)
+        
+        val splits = data.randomSplit(Array(0.6, 0.4), seed = 1234L)
+        val train = splits(0)
+        val test = splits(1)
+        // specify layers for the neural network:
+        // input layer of size 4 (features), two intermediate of size 5 and 4
+        // and output of size 3 (classes)
+        val layers = Array[Int](4, 5, 4, 3)
+        // create the trainer and set its parameters
+        val trainer = new MultilayerPerceptronClassifier()
+          .setLayers(layers)
+          .setBlockSize(128)
+          .setSeed(1234L)
+          .setMaxIter(100)
+        // train the model
+        val model = trainer.fit(train)
+        // compute accuracy on the test set
+        val result = model.transform(test)
+        val predictionAndLabels = result.select("prediction", "label")
+        val evaluator = new MulticlassClassificationEvaluator()
+          .setMetricName("accuracy")
+        println("Accuracy: " + evaluator.evaluate(predictionAndLabels))
+        val accuracy = evaluator.evaluate(predictionAndLabels)
+        accuracy
     }
     
     def Multilayer_perceptron_classifier() = {

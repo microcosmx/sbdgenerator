@@ -72,7 +72,7 @@ class ProcessGen3 extends FlatSpec with Matchers with BeforeAndAfterAll with Tes
         conf.set("spark.master", "local[*]")
         //conf.set("spark.master", "spark://192.168.20.17:7070")
         conf.set("spark.app.name", "Aliyun")
-        conf.set("spark.ui.port", "55555")
+        //conf.set("spark.ui.port", "55555")
         conf.set("spark.default.parallelism", "10")
         conf.set("spark.sql.shuffle.partitions", "10")
         conf.set("spark.sql.shuffle.partitions", "1")
@@ -108,6 +108,7 @@ class ProcessGen3 extends FlatSpec with Matchers with BeforeAndAfterAll with Tes
         
         val trans = Transform(spark)
         val mlgen = MLGenetor(spark)
+        val mlreg = MLRegression(spark)
         
 
         try{
@@ -162,6 +163,9 @@ class ProcessGen3 extends FlatSpec with Matchers with BeforeAndAfterAll with Tes
             
             val mseAvg = mlgen.decisionTreeMSE(transDS)
             val mseAvg2 = mlgen.decisionPipline(transDS)
+            //val mseAvg3 = mlgen.decision_Multilayer_perceptron_classifier(transDS)
+            val mseAvg5 = mlreg.decision_Gradient_boosted_tree(transDS)
+            
             println(s"Root Mean Squared Error (RMSE) on data set = $mseAvg, $mseAvg2")
             val mse = (mseAvg+mseAvg2)/2
             println(mse)
@@ -186,10 +190,10 @@ class ProcessGen3 extends FlatSpec with Matchers with BeforeAndAfterAll with Tes
             import scala.sys.process._
             val command = Seq(
                 "Rscript",
-                "plot.R")
+                "data2/plot.R")
             println(s"R command: ${command.mkString(" ")}")
             val exitCode = blocking { command.! }
-            require(exitCode == 0, s"R exited with code $exitCode")
+            //require(exitCode == 0, s"R exited with code $exitCode")
 
             
         }

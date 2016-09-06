@@ -189,6 +189,8 @@ case class MLFeatureTransform(
         
         val indexed = indexer.fit(df).transform(df)
         indexed.show()
+        
+        indexed.drop("category").withColumnRenamed("categoryIndex", "category").show
     }
     
     def IndexToString() = {
