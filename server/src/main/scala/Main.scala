@@ -53,7 +53,8 @@ object Main extends App {
         val sc = initSparkContext(cfg.slice("spark."))
         implicit val system = ActorSystem("sbd")
         // val sqlContext = new org.apache.spark.sql.SQLContext(sc)
-        val sqlContext = new org.apache.spark.sql.hive.HiveContext(sc)
+        //val sqlContext = new org.apache.spark.sql.hive.HiveContext(sc)
+        val sqlContext = new org.apache.spark.sql.SQLContext(sc)
         val spark = SparkSession.builder
           .config(sc.getConf)
           .getOrCreate()
