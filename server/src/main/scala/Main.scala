@@ -54,11 +54,14 @@ object Main extends App {
         implicit val system = ActorSystem("sbd")
         // val sqlContext = new org.apache.spark.sql.SQLContext(sc)
         val sqlContext = new org.apache.spark.sql.hive.HiveContext(sc)
+        val spark = SparkSession.builder
+          .config(sc.getConf)
+          .getOrCreate()
         val fs = initFileSystem(sc, cfg.slice("fs."))
         val jdbc = initJDBC(fs,cfg)
         val ml = MLSample(sc,sqlContext)
         val ss = SStream(sc)
-        val env = Env(system, cfg, fs, jdbc, ml, sc, sqlContext)
+        val env = Env(system, cfg, fs, jdbc, ml, sc, sqlContext, spark)
         
         //http server actor
         system.actorOf(Props(classOf[Server], env).withRouter(RoundRobinPool(5)), name = "server")

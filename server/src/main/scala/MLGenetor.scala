@@ -649,23 +649,46 @@ case class MLGenetor(
               }).toSeq
               
               val vectors = fsValue ++ fsValueInt ++ fsValueLong
-              val label = vectors.head
-              val fvector = vectors.tail
-              val features = Vectors.dense(fvector.head, fvector.tail:_*)
+              val label = Math.abs(vectors.head.toInt)*10%3
+              val fvector = vectors.tail//.take(4)
+              //val features = Vectors.sparse(fvector.size, Array.range(0, fvector.size), fvector.toArray)
+              val features = Vectors.dense(fvector.toArray)
               LabeledPoint(
                 label, features
               )
          }
         
         var data = spark.createDataset(datasetRDD)
+        val featureSize = data.head().features.size
+        println(data.head().features)
+        data.show
         
-        val splits = data.randomSplit(Array(0.6, 0.4), seed = 1234L)
+        /*
+        val datasample = spark.read.format("libsvm")
+          .load("data/mllib/sample_multiclass_classification_data.txt")
+        datasample.show
+        println(datasample.head().getAs("features"))
+        */
+        
+        import org.apache.spark.ml.feature.MinMaxScaler
+        val scaler = new MinMaxScaler()
+          .setInputCol("features")
+          .setOutputCol("scaledFeatures")
+        val scalerModel = scaler.fit(data)
+        val scaledData = scalerModel.transform(data)
+        val scalaDF = scaledData.drop("features").withColumnRenamed("scaledFeatures", "features")
+        
+        //import org.apache.spark.mllib.linalg.Vectors
+        //import org.apache.spark.mllib.stat.{MultivariateStatisticalSummary, Statistics}
+        //val summary: MultivariateStatisticalSummary = Statistics.colStats(data.rdd.map(_.features))
+        
+        val splits = scalaDF.randomSplit(Array(0.6, 0.4), seed = 1234L)
         val train = splits(0)
         val test = splits(1)
         // specify layers for the neural network:
         // input layer of size 4 (features), two intermediate of size 5 and 4
         // and output of size 3 (classes)
-        val layers = Array[Int](4, 5, 4, 3)
+        val layers = Array[Int](featureSize, 5, 4, 3)
         // create the trainer and set its parameters
         val trainer = new MultilayerPerceptronClassifier()
           .setLayers(layers)

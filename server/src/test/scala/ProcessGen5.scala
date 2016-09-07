@@ -51,8 +51,40 @@ import akka.testkit.TestKitBase
 class ProcessGen5 extends FlatSpec with Matchers with BeforeAndAfterAll with TestKitBase {
   
     implicit lazy val system = ActorSystem()
+    implicit val timeout: Timeout = 1.minute
+    
+    var fs: org.apache.hadoop.fs.FileSystem = null
+    var fs_conf: Configuration = null
+    var spark:SparkSession = null
+    var sc: org.apache.spark.SparkContext = null
+    var sqlContext: org.apache.spark.sql.SQLContext = null
 
     override def beforeAll() {
+        import org.apache.log4j.Logger
+        import org.apache.log4j.Level
+        Logger.getLogger("org").setLevel(Level.WARN)
+        Logger.getLogger("akka").setLevel(Level.WARN)
+        Logger.getLogger("parquet.hadoop").setLevel(Level.WARN)
+      
+        val fs_conf = new org.apache.hadoop.conf.Configuration
+        val fs = FileSystem.get(fs_conf)
+      
+        val conf = new org.apache.spark.SparkConf
+        conf.set("spark.master", "local[*]")
+        //conf.set("spark.master", "spark://192.168.20.17:7070")
+        conf.set("spark.app.name", "genetic")
+        //conf.set("spark.ui.port", "55555")
+        conf.set("spark.default.parallelism", "10")
+        conf.set("spark.sql.shuffle.partitions", "10")
+        conf.set("spark.sql.shuffle.partitions", "1")
+        conf.set("spark.sql.autoBroadcastJoinThreshold", "1")
+        
+        val spark = SparkSession.builder
+          .config(conf)
+          .getOrCreate()
+      
+        val sc = spark.sparkContext
+        val sqlContext = spark.sqlContext
     }
 
     override def afterAll() {
@@ -67,23 +99,34 @@ class ProcessGen5 extends FlatSpec with Matchers with BeforeAndAfterAll with Tes
     
 
     it should "run it" in {
+      
+        val cfg = new Config("conf/server.properties")
+        
+        val jdbc = null
+        val ml = MLSample(sc,sqlContext)
+        val ss = SStream(sc)
+        val env = Env(system, cfg, fs, jdbc, ml, sc, sqlContext)
+        
+        val trans = Transform(spark)
+        val mlgen = MLGenetor(spark)
 
         try{
-            import GA._
             
-            var population =  initPopulation(CalFitnessTwo)
+            val ga = GA(spark, env, trans, mlgen)
+            
+            var population = ga.initPopulation(ga.CalFitnessTwo)
             
             println(population)
             
             var smallest = population.head.fitness
             var smallestPlan = population.head
             var temp = 0.0
-            for(i <- 0 until MAX_GENERATION){
-              population = selectChromosome(population)
+            for(i <- 0 until ga.MAX_GENERATION){
+              population = ga.selectChromosome(population)
               println(s"--------------gen $i----------------")
               println(population.map(x=>x.sequence.toSeq).toSeq)
               //population = CrossOver_Mutation(population, CalFitnessOne)
-              population = CrossOver_Mutation(population, CalFitnessTwo)
+              population = ga.CrossOver_Mutation(population, ga.CalFitnessTwo)
               temp = population.head.fitness
               if(temp < smallest) {
                 smallest = temp
@@ -97,7 +140,7 @@ class ProcessGen5 extends FlatSpec with Matchers with BeforeAndAfterAll with Tes
             
             
             //persist
-            val result = dataTransformProcess(smallestPlan.sequence)
+            val result = ga.dataTransformProcess(smallestPlan.sequence)
             import HadoopConversions._
             val writeRDD = spark.sparkContext.makeRDD(Seq(result.schema.fieldNames.mkString(","))) ++
                               result.rdd.map(row=>row.mkString(","))

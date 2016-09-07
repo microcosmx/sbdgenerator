@@ -116,13 +116,13 @@ class ProcessGen_Stats extends FlatSpec with Matchers with BeforeAndAfterAll wit
             import env.sqlContext.implicits._
             
             
-//            mlstat.statCols()
+            mlstat.statCols()
 //            mlstat.Correlations()
 //            mlstat.sampling()
 //            mlstat.Hypothesis_testing()
 //            mlstat.Hypothesis_testing2()
 //            mlstat.randomData()
-            mlstat.Kernel_density_estimation()
+//            mlstat.Kernel_density_estimation()
             
             
         }

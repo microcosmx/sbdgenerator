@@ -45,46 +45,13 @@ import org.apache.spark.sql.functions._
 import org.apache.spark.sql.internal.SQLConf
 import org.apache.spark.sql.types._
 
-object GA {
   
-  implicit lazy val system = ActorSystem()
-  implicit val timeout: Timeout = 1.minute
-  
-  import org.apache.log4j.Logger
-  import org.apache.log4j.Level
-  Logger.getLogger("org").setLevel(Level.WARN)
-  Logger.getLogger("akka").setLevel(Level.WARN)
-  Logger.getLogger("parquet.hadoop").setLevel(Level.WARN)
-
-  val fs_conf = new org.apache.hadoop.conf.Configuration
-  val fs = FileSystem.get(fs_conf)
-
-  val conf = new org.apache.spark.SparkConf
-  conf.set("spark.master", "local[*]")
-  //conf.set("spark.master", "spark://192.168.20.17:7070")
-  conf.set("spark.app.name", "genetic")
-  //conf.set("spark.ui.port", "55555")
-  conf.set("spark.default.parallelism", "10")
-  conf.set("spark.sql.shuffle.partitions", "10")
-  conf.set("spark.sql.shuffle.partitions", "1")
-  conf.set("spark.sql.autoBroadcastJoinThreshold", "1")
-  
-  val spark = SparkSession.builder
-    .config(conf)
-    .getOrCreate()
-
-  val sc = spark.sparkContext
-  val sqlContext = spark.sqlContext
-  
-  val cfg = new Config("conf/server.properties")
-        
-  val jdbc = null
-  val ml = MLSample(sc,sqlContext)
-  val ss = SStream(sc)
-  val env = Env(system, cfg, fs, jdbc, ml, sc, sqlContext)
-  
-  val trans = Transform(spark)
-  val mlgen = MLGenetor(spark)
+case class GA(
+    spark: SparkSession,
+    env: Env,
+    trans: Transform,
+    mlgen: MLGenetor)
+{
   
   import scala.util._
   import env.sqlContext.implicits._

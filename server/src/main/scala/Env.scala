@@ -15,7 +15,8 @@ case class Env(
         db: JDBC,
         ml: MLSample,
         sc: SparkContext,
-        sqlContext: SQLContext)
+        sqlContext: SQLContext,
+        spark: SparkSession = null)
 {
 
     def mkPath(key: String, ext: String) : String = cfg.get("fs.data") + s"$key$ext"

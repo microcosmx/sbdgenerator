@@ -171,6 +171,88 @@ case class MLRegression(
         println("Learned regression tree model:\n" + treeModel.toDebugString)
     }
     
+    def decision_randomforest(dataset: Dataset[Row]) = {
+        import org.apache.spark.ml.Pipeline
+        import org.apache.spark.ml.evaluation.RegressionEvaluator
+        import org.apache.spark.ml.feature.VectorIndexer
+        import org.apache.spark.ml.regression.{RandomForestRegressionModel, RandomForestRegressor}
+        
+        import org.apache.spark.ml.feature.{IndexToString, StringIndexer, VectorIndexer}
+        import scala.reflect.runtime.{universe => ru}
+        
+        var fs = dataset.schema.fields
+        var dataset1 = dataset
+        fs.zipWithIndex.filter(x=>x._1.dataType.simpleString=="string").map(x=>{
+             val indexer = new StringIndexer()
+              .setInputCol(x._1.name)
+              .setOutputCol(x._1.name+"_index")
+            val indexed = indexer.fit(dataset1).transform(dataset1)
+            dataset1 = indexed.drop(x._1.name).withColumnRenamed(x._1.name+"_index", x._1.name)
+        })
+        fs = dataset1.schema.fields
+        
+        val datasetRDD = dataset1.rdd.map { row => 
+              val typeMirror = ru.runtimeMirror(row.getClass.getClassLoader)
+              val instanceMirror = typeMirror.reflect(row)
+              val fsValue = fs.zipWithIndex.filter(x=>x._1.dataType.simpleString=="double").map(x => {
+                  val thevalue = row.get(x._2)
+                  if(thevalue==null) 0.0 else thevalue.asInstanceOf[Double]
+              }).toSeq
+              val fsValueInt = fs.zipWithIndex.filter(x=>x._1.dataType.simpleString=="int").map(x => {
+                  val thevalue = row.get(x._2)
+                  if(thevalue==null) 0.0 else thevalue.asInstanceOf[Int].toDouble
+              }).toSeq
+              val fsValueLong = fs.zipWithIndex.filter(x=>x._1.dataType.simpleString=="long").map(x => {
+                  val thevalue = row.get(x._2)
+                  if(thevalue==null) 0.0 else thevalue.asInstanceOf[Long].toDouble
+              }).toSeq
+              
+              val vectors = fsValue ++ fsValueInt ++ fsValueLong
+              val label = vectors.head.toInt % 100
+              val fvector = vectors.tail
+              val features = Vectors.dense(fvector.toArray)
+              LabeledPoint(
+                label, features
+              )
+         }
+        
+        import org.apache.spark.mllib.linalg.Vectors
+        import org.apache.spark.mllib.stat.{MultivariateStatisticalSummary, Statistics}
+        val observations = datasetRDD.map { x => Vectors.dense(x.features.toArray) }
+        val summary: MultivariateStatisticalSummary = Statistics.colStats(observations)
+        println(summary.mean)  // a dense vector containing the mean value for each column
+        println(summary.variance)  // column-wise variance
+        println(summary.numNonzeros)  // number of nonzeros in each column
+        
+        var data = spark.createDataset(datasetRDD)
+        
+        val featureIndexer = new VectorIndexer()
+          .setInputCol("features")
+          .setOutputCol("indexedFeatures")
+          //.setMaxCategories(100)
+          .fit(data)
+        
+        val Array(trainingData, testData) = data.randomSplit(Array(0.7, 0.3))
+        
+        val rf = new RandomForestRegressor()
+          .setLabelCol("label")
+          .setFeaturesCol("indexedFeatures")
+        
+        val pipeline = new Pipeline()
+          .setStages(Array(featureIndexer, rf))
+        
+        val model = pipeline.fit(trainingData)
+        val predictions = model.transform(testData)
+        predictions.select("prediction", "label", "features").show(5)
+        
+        val evaluator = new RegressionEvaluator()
+          .setLabelCol("label")
+          .setPredictionCol("prediction")
+          .setMetricName("rmse")
+        val rmse = evaluator.evaluate(predictions)
+        rmse
+    }
+    
     def randomforest() = {
         import org.apache.spark.ml.Pipeline
         import org.apache.spark.ml.evaluation.RegressionEvaluator

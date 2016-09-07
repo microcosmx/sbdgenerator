@@ -82,41 +82,51 @@ case class Server(env:Env) extends Actor with ActorLogging with HttpService {
             }
         } ~
         pathPrefix("genetic") {
-            import GA._
+            parameters('param1 ? "-1", 'param2 ? "-1") { (param1, param2) =>
+              
+              println(param1)
             
-            var population =  initPopulation(CalFitnessTwo)
-            
-            println(population)
-            
-            var smallest = population.head.fitness
-            var smallestPlan = population.head
-            var temp = 0.0
-            for(i <- 0 until MAX_GENERATION){
-              population = selectChromosome(population)
-              println(s"--------------gen $i----------------")
-              println(population.map(x=>x.sequence.toSeq).toSeq)
-              //population = CrossOver_Mutation(population, CalFitnessOne)
-              population = CrossOver_Mutation(population, CalFitnessTwo)
-              temp = population.head.fitness
-              if(temp < smallest) {
-                smallest = temp
-                smallestPlan = population.head
+              val trans = Transform(env.spark)
+              val mlgen = MLGenetor(env.spark)
+              val spark = env.spark
+              
+              val ga = GA(spark, env, trans, mlgen)
+              
+              var population = ga.initPopulation(ga.CalFitnessTwo)
+              
+              println(population)
+              
+              var smallest = population.head.fitness
+              var smallestPlan = population.head
+              var temp = 0.0
+              for(i <- 0 until ga.MAX_GENERATION){
+                population = ga.selectChromosome(population)
+                println(s"--------------gen $i----------------")
+                println(population.map(x=>x.sequence.toSeq).toSeq)
+                //population = CrossOver_Mutation(population, CalFitnessOne)
+                population = ga.CrossOver_Mutation(population, ga.CalFitnessTwo)
+                temp = population.head.fitness
+                if(temp < smallest) {
+                  smallest = temp
+                  smallestPlan = population.head
+                }
               }
-            }
-            
-            println("--------------result----------------")
-            println(s"--transforms: ${smallestPlan.sequence.toSeq}")
-            println(s"RMSE = $smallest")
-            
-            
-            //persist
-            val result = dataTransformProcess(smallestPlan.sequence)
-            import HadoopConversions._
-            val writeRDD = spark.sparkContext.makeRDD(Seq(result.schema.fieldNames.mkString(","))) ++
-                              result.rdd.map(row=>row.mkString(","))
-            fs.writeFileRDD(writeRDD, "data2/trans.csv")
-            respondWithMediaType(`application/json`) {
-              complete { s"status: finished" }
+              
+              println("--------------result----------------")
+              println(s"--transforms: ${smallestPlan.sequence.toSeq}")
+              println(s"RMSE = $smallest")
+              
+              
+              //persist
+              val result = ga.dataTransformProcess(smallestPlan.sequence)
+              import HadoopConversions._
+              val writeRDD = spark.sparkContext.makeRDD(Seq(result.schema.fieldNames.mkString(","))) ++
+                                result.rdd.map(row=>row.mkString(","))
+              env.fs.writeFileRDD(writeRDD, "data2/trans.csv")
+              
+              respondWithMediaType(`application/json`) {
+                complete { s"status: finished" }
+              }
             }
         } ~
         pathPrefix("dashboard"/"api") {
