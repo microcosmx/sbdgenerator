@@ -279,21 +279,11 @@ case class MLGenetor(
     }
     
     
-    def decisionTreeMSE(dataset: Dataset[Row]) = {
-        import org.apache.spark.ml.feature.{OneHotEncoder, StringIndexer}
-        import scala.reflect.runtime.{universe => ru}
+    def decisionTreeMSE(dataset: Dataset[Row], preferredTargets:Seq[String]=Seq(), preferredFeatures:Seq[String]=Seq()) = {
+      
+        val datasetRDD = Utils.preprocessML(dataset, preferredTargets, preferredFeatures)
         
-        var fs = dataset.schema.fields
-        var dataset1 = dataset
-        fs.zipWithIndex.filter(x=>x._1.dataType.simpleString=="string").map(x=>{
-             val indexer = new StringIndexer()
-              .setInputCol(x._1.name)
-              .setOutputCol(x._1.name+"_index")
-            val indexed = indexer.fit(dataset1).transform(dataset1)
-            dataset1 = indexed.drop(x._1.name).withColumnRenamed(x._1.name+"_index", x._1.name)
-        })
-        fs = dataset1.schema.fields
-        
+        /*
         val datasetRDD = dataset1.rdd.map { row => 
               val typeMirror = ru.runtimeMirror(row.getClass.getClassLoader)
               val instanceMirror = typeMirror.reflect(row)
@@ -321,6 +311,7 @@ case class MLGenetor(
                 label, features
               )
          }
+         */
         
         var data = spark.createDataset(datasetRDD)//(Encoders.kryo[LabeledPoint])
         
@@ -350,16 +341,16 @@ case class MLGenetor(
           .setPredictionCol("prediction")
           .setMetricName("rmse")
         
-        var rmse = 0.0
-        try {
-          rmse = evaluator.evaluate(predictions)
-        }
-        catch {
-            case t: Throwable => println(s"-----${t.printStackTrace()}--------")
-        }
-        finally{
-            rmse = 0.0
-        }
+//        var rmse = 0.5
+//        try {
+          val rmse = evaluator.evaluate(predictions)
+//        }
+//        catch {
+//            case t: Throwable => println(s"-----${t.printStackTrace()}--------")
+//        }
+//        finally{
+//            rmse = 0.5
+//        }
         
         //val treeModel = model.stages(1).asInstanceOf[DecisionTreeRegressionModel]
         //println("Learned regression tree model:\n" + treeModel.toDebugString)
@@ -368,17 +359,15 @@ case class MLGenetor(
     }
     
     
-    def decisionPipline(dataset: Dataset[Row]) = {
+    def decisionPipline(dataset: Dataset[Row], preferredTargets:Seq[String]=Seq(), preferredFeatures:Seq[String]=Seq()) = {
+      
+        var datasetRDD = Utils.preprocessML(dataset, preferredTargets, preferredFeatures)
         
         import scala.reflect.runtime.{universe => ru}
-        val fs = dataset.schema.fields
-        val datasetDF = dataset.rdd.map { row => 
-              val fsValue = fs.zipWithIndex.filter(x=>x._1.dataType.simpleString=="int").map(x => {
-                  val thevalue = row.get(x._2)
-                  if(thevalue==null) 0 else thevalue.asInstanceOf[Int]
-              }).toSeq
-              (fsValue.tail.mkString(" "), fsValue.head%2)
-         }.toDF("text", "label")
+         
+         val datasetDF = datasetRDD.map(x=>{
+            (Math.abs(x.label.toInt)%2, x.features.toArray.mkString(" "))
+         }).toDF("label", "text")
          
          //datasetDF.show
         
@@ -615,48 +604,19 @@ case class MLGenetor(
     }
     
     
-    def decision_Multilayer_perceptron_classifier(dataset: Dataset[Row]) = {
+    def decision_Multilayer_perceptron_classifier(dataset: Dataset[Row], preferredTargets:Seq[String]=Seq(), preferredFeatures:Seq[String]=Seq()) = {
         import org.apache.spark.ml.classification.MultilayerPerceptronClassifier
         import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator
         import org.apache.spark.ml.feature.{IndexToString, StringIndexer, VectorIndexer}
         import scala.reflect.runtime.{universe => ru}
         
-        var fs = dataset.schema.fields
-        var dataset1 = dataset
-        fs.zipWithIndex.filter(x=>x._1.dataType.simpleString=="string").map(x=>{
-             val indexer = new StringIndexer()
-              .setInputCol(x._1.name)
-              .setOutputCol(x._1.name+"_index")
-            val indexed = indexer.fit(dataset1).transform(dataset1)
-            dataset1 = indexed.drop(x._1.name).withColumnRenamed(x._1.name+"_index", x._1.name)
-        })
-        fs = dataset1.schema.fields
+        var datasetRDD = Utils.preprocessML(dataset, preferredTargets, preferredFeatures)
         
-        val datasetRDD = dataset1.rdd.map { row => 
-              val typeMirror = ru.runtimeMirror(row.getClass.getClassLoader)
-              val instanceMirror = typeMirror.reflect(row)
-              val fsValue = fs.zipWithIndex.filter(x=>x._1.dataType.simpleString=="double").map(x => {
-                  val thevalue = row.get(x._2)
-                  if(thevalue==null) 0.0 else thevalue.asInstanceOf[Double]
-              }).toSeq
-              val fsValueInt = fs.zipWithIndex.filter(x=>x._1.dataType.simpleString=="int").map(x => {
-                  val thevalue = row.get(x._2)
-                  if(thevalue==null) 0.0 else thevalue.asInstanceOf[Int].toDouble
-              }).toSeq
-              val fsValueLong = fs.zipWithIndex.filter(x=>x._1.dataType.simpleString=="long").map(x => {
-                  val thevalue = row.get(x._2)
-                  if(thevalue==null) 0.0 else thevalue.asInstanceOf[Long].toDouble
-              }).toSeq
-              
-              val vectors = fsValue ++ fsValueInt ++ fsValueLong
-              val label = Math.abs(vectors.head.toInt)*10%3
-              val fvector = vectors.tail//.take(4)
-              //val features = Vectors.sparse(fvector.size, Array.range(0, fvector.size), fvector.toArray)
-              val features = Vectors.dense(fvector.toArray)
-              LabeledPoint(
-                label, features
+        datasetRDD = datasetRDD.map(x=>{
+            LabeledPoint(
+                Math.abs(x.label.toInt)*10%3, x.features
               )
-         }
+        })
         
         var data = spark.createDataset(datasetRDD)
         val featureSize = data.head().features.size
@@ -704,7 +664,8 @@ case class MLGenetor(
           .setMetricName("accuracy")
         println("Accuracy: " + evaluator.evaluate(predictionAndLabels))
         val accuracy = evaluator.evaluate(predictionAndLabels)
-        accuracy
+        val rmse = 1 - accuracy
+        rmse
     }
     
     def Multilayer_perceptron_classifier() = {

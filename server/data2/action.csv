@@ -1,0 +1,8 @@
+target,action,object
+rank,filter,null
+city state,related_to,other related
+college,related_to,any
+superzip,related_to,any
+superzip,related_to,different avg
+all,related_to,meaningful
+superzip,related_to,zipcode

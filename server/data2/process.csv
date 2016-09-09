@@ -1,6 +1,6 @@
-transform,zipcode,centile,superzip,rank,city,state,adultpop,households,income,college
-trans1,1,1,1,0,1,1,1,0,1,0
-trans2,0,0,0,1,1,0,1,1,0,1
-trans3,0,0,0,0,0,0,0,0,1,0
-trans4,0,0,1,1,1,0,1,1,0,0
-trans5,0,1,0,1,0,0,1,1,1,1
+transform,zipcode,superzip,rank,city,state,adultpop,households,college,income,centile
+trans1,0,1,0,0,0,0,0,1,1,1
+trans2,1,0,0,0,1,1,1,1,1,0
+trans3,0,1,0,0,0,1,1,1,0,1
+trans4,1,0,0,0,0,0,1,1,1,1
+trans5,1,1,1,1,1,1,1,1,0,1

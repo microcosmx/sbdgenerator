@@ -136,6 +136,41 @@ class ProcessGen3 extends FlatSpec with Matchers with BeforeAndAfterAll with Tes
             transDS.show()
             
             val features = superzipDS.schema.fields
+            val featureNames = features.map(_.name).toSeq
+            
+            val actions = spark.read
+                //.schema(schema1)
+                .option("header", "true")
+                .option("inferSchema", "true")
+                .csv("data2/action.csv")
+            val actionsDS = actions.as("actions")
+            actionsDS.show
+            
+            val actionsList = actionsDS.collect.map { row => 
+                val target1 = row.getAs[String]("target")
+                val action1 = row.getAs[String]("action")
+                val object1 = row.getAs[String]("object")
+                if(target1!="all" && action1!="related_to" && object1!="any"){
+                  ("level1", (target1.split(" ").toSeq, action1.split(" ").toSeq, object1.split(" ").toSeq))
+                }else{
+                  ("level3", (
+                      if(target1.contains("all")) Seq()/*featureNames.toSeq*/ else target1.split(" ").toSeq,
+                      action1.split(" ").toSeq, 
+                      if(object1.contains("any")) Seq()/*featureNames.toSeq*/ else object1.split(" ").toSeq
+                  ))
+                }
+            }
+            val actionLevel1 = actionsList.filter(_._1 == "level1").map(_._2).toSeq
+            val actionLevel3 = actionsList.filter(_._1 == "level3").map(_._2).toSeq
+            
+            actionLevel1.foreach { x=>
+                if(x._2.head == "filter"){
+                    transDS = transDS.filter(s"${x._1.head} != ${x._3.head}") 
+                }else{
+                    //TODO
+                }
+            }
+            transDS.show
             
             val length = features.length * transNames.length
             val sequence = Array.fill(length)(0).map(x => x ^ Random.nextInt(2))
@@ -160,16 +195,37 @@ class ProcessGen3 extends FlatSpec with Matchers with BeforeAndAfterAll with Tes
             transDS.printSchema()
             transDS.show()
             
+            val targets_ = actionLevel3.flatMap(_._1).intersect(featureNames).toSeq
+            val objects_ = actionLevel3.flatMap(_._3).intersect(featureNames).diff(targets_).toSeq
+            val actions_ = actionLevel3.flatMap(_._2).toSeq
             
-            val mseAvg = mlgen.decisionTreeMSE(transDS)
-            val mseAvg2 = mlgen.decisionPipline(transDS)
-            val mseAvg3 = mlgen.decision_Multilayer_perceptron_classifier(transDS)
-            val mseAvg4 = mlreg.decision_randomforest(transDS)
-            val mseAvg5 = mlreg.decision_Gradient_boosted_tree(transDS)
+            val targets_left = featureNames.diff(targets_)
+            val objects_left = featureNames.diff(objects_)
             
-            println(s"Root Mean Squared Error (RMSE) on data set = $mseAvg, $mseAvg2")
-            val mse = 0.1*mseAvg + 0.2*mseAvg2 + 0.4*mseAvg3 + 0.1*mseAvg4 + 0.2*mseAvg5
-            println(mse)
+            val actionLevel3Process = Seq(
+                ((targets_, actions_, objects_), 4),
+                ((targets_, actions_, objects_left), 3),
+                ((targets_left.diff(objects_), actions_, objects_), 2),
+                ((targets_left, actions_, objects_left), 1)
+            )
+            
+            val result = actionLevel3Process.map(actps=>{
+                val result1 = mlgen.decisionTreeMSE(transDS, actps._1._1, actps._1._3)
+                val result2 = mlgen.decisionPipline(transDS, actps._1._1, actps._1._3)
+                val result3 = mlgen.decision_Multilayer_perceptron_classifier(transDS, actps._1._1, actps._1._3)
+                val result4 = mlreg.decision_randomforest(transDS, actps._1._1, actps._1._3)
+                val result5 = mlreg.decision_Gradient_boosted_tree(transDS, actps._1._1, actps._1._3)
+                val minresult = Seq(result1, result2, result3, result4, result5).sortBy(x => x).head
+                println(minresult, result1, result2, result3, result4, result5)
+                val retVal = if(minresult < 0.2) minresult else -1.0
+                (retVal, actps._2)
+            }).toSeq
+            
+            val validResult = result.filter(_._1 < 0)
+            println(validResult)
+            
+            val targetValue = validResult.map(_._1).sum / math.pow(validResult.map(_._2).sum, 1.5)
+            println(s"-------target value is-------${targetValue}----------")
             
             
             //persist
