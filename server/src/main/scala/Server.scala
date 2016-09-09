@@ -103,8 +103,8 @@ case class Server(env:Env) extends Actor with ActorLogging with HttpService {
               var temp = 0.0
               for(i <- 0 until ga.MAX_GENERATION){
                 population = ga.selectChromosome(population)
-                println(s"--------------gen $i----------------")
-                println(population.map(x=>x.sequence.toSeq).toSeq)
+                log.info(s"--------------gen $i----------------")
+                log.info(population.map(x=>x.sequence.toSeq).toSeq.toString)
                 //population = CrossOver_Mutation(population, CalFitnessOne)
                 population = ga.CrossOver_Mutation(population, ga.CalFitnessTwo)
                 temp = population.head.fitness
@@ -114,9 +114,9 @@ case class Server(env:Env) extends Actor with ActorLogging with HttpService {
                 }
               }
               
-              println("--------------result----------------")
-              println(s"--transforms: ${smallestPlan.sequence.toSeq}")
-              println(s"RMSE = $smallest")
+              log.info("--------------result----------------")
+              log.info(s"--transforms: ${smallestPlan.sequence.toSeq}")
+              log.info(s"RMSE = $smallest")
               
               
               //persist

@@ -127,7 +127,7 @@ class ProcessGen5 extends FlatSpec with Matchers with BeforeAndAfterAll with Tes
             for(i <- 0 until ga.MAX_GENERATION){
               population = ga.selectChromosome(population)
               log.info(s"--------------gen $i----------------")
-              log.info(population.map(x=>x.sequence.toSeq).toSeq)
+              log.info(population.map(x=>x.sequence.toSeq).toSeq.toString())
               //population = CrossOver_Mutation(population, CalFitnessOne)
               population = ga.CrossOver_Mutation(population, ga.CalFitnessTwo)
               temp = population.head.fitness
