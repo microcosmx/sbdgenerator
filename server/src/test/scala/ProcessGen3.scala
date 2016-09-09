@@ -130,11 +130,6 @@ class ProcessGen3 extends FlatSpec with Matchers with BeforeAndAfterAll with Tes
                 .csv("data2/superzip.csv")
             val superzipDS = zip.as("superzip")
             
-            var transDS = superzipDS//.filter(x => {x.getInt(0) > 1100}).sort(features(0).name)
-            
-            transDS.printSchema()
-            transDS.show()
-            
             val features = superzipDS.schema.fields
             val featureNames = features.map(_.name).toSeq
             
@@ -163,6 +158,17 @@ class ProcessGen3 extends FlatSpec with Matchers with BeforeAndAfterAll with Tes
             val actionLevel1 = actionsList.filter(_._1 == "level1").map(_._2).toSeq
             val actionLevel3 = actionsList.filter(_._1 == "level3").map(_._2).toSeq
             
+            
+            
+            
+            
+            
+            
+            var transDS = superzipDS//.filter(x => {x.getInt(0) > 1100}).sort(features(0).name)
+            
+            transDS.printSchema()
+            transDS.show()
+            //data transform
             actionLevel1.foreach { x=>
                 if(x._2.head == "filter"){
                     transDS = transDS.filter(s"${x._1.head} != ${x._3.head}") 
@@ -192,9 +198,18 @@ class ProcessGen3 extends FlatSpec with Matchers with BeforeAndAfterAll with Tes
               transDS = instanceMirror.reflectMethod(methodx)(transDS, x._2).asInstanceOf[Dataset[Row]]
             })
             
+            transDS
+            
             transDS.printSchema()
             transDS.show()
             
+            
+            
+            
+            
+            
+            
+            //machine learning
             val targets_ = actionLevel3.flatMap(_._1).intersect(featureNames).toSeq
             val objects_ = actionLevel3.flatMap(_._3).intersect(featureNames).diff(targets_).toSeq
             val actions_ = actionLevel3.flatMap(_._2).toSeq
@@ -217,15 +232,24 @@ class ProcessGen3 extends FlatSpec with Matchers with BeforeAndAfterAll with Tes
                 val result5 = mlreg.decision_Gradient_boosted_tree(transDS, actps._1._1, actps._1._3)
                 val minresult = Seq(result1, result2, result3, result4, result5).sortBy(x => x).head
                 println(minresult, result1, result2, result3, result4, result5)
-                val retVal = if(minresult < 0.2) minresult else -1.0
+                val retVal = if(minresult < 0.5) minresult else -1.0
                 (retVal, actps._2)
             }).toSeq
+            println(result)
             
-            val validResult = result.filter(_._1 < 0)
+            val validResult = result.filter(_._1 > 0)
             println(validResult)
             
             val targetValue = validResult.map(_._1).sum / math.pow(validResult.map(_._2).sum, 1.5)
             println(s"-------target value is-------${targetValue}----------")
+            
+            targetValue
+            
+            
+            
+            
+            
+            
             
             
             //persist

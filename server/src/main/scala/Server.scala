@@ -86,11 +86,13 @@ case class Server(env:Env) extends Actor with ActorLogging with HttpService {
               
               println(param1)
             
-              val trans = Transform(env.spark)
-              val mlgen = MLGenetor(env.spark)
               val spark = env.spark
               
-              val ga = GA(spark, env, trans, mlgen)
+              val trans = Transform(spark)
+              val mlgen = MLGenetor(spark)
+              val mlreg = MLRegression(spark)
+              
+              val ga = GA(spark, env, trans, mlgen, mlreg)
               
               var population = ga.initPopulation(ga.CalFitnessTwo)
               
