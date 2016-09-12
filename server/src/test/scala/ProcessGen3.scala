@@ -115,6 +115,8 @@ class ProcessGen3 extends FlatSpec with Matchers with BeforeAndAfterAll with Tes
             import scala.util._
             import env.sqlContext.implicits._
             
+            val state = State()
+            
             import scala.reflect.runtime.{universe => ru}
             val typeMirror = ru.runtimeMirror(trans.getClass.getClassLoader)
             val instanceMirror = typeMirror.reflect(trans)
@@ -158,28 +160,35 @@ class ProcessGen3 extends FlatSpec with Matchers with BeforeAndAfterAll with Tes
             val actionLevel1 = actionsList.filter(_._1 == "level1").map(_._2).toSeq
             val actionLevel3 = actionsList.filter(_._1 == "level3").map(_._2).toSeq
             
-            
-            
-            
-            
-            
-            
-            var transDS = superzipDS//.filter(x => {x.getInt(0) > 1100}).sort(features(0).name)
-            
-            transDS.printSchema()
-            transDS.show()
+
+            //preprocessing
+            var transDS_pre = superzipDS//.filter(x => {x.getInt(0) > 1100}).sort(features(0).name)
             //data transform
             actionLevel1.foreach { x=>
                 if(x._2.head == "filter"){
-                    transDS = transDS.filter(s"${x._1.head} != ${x._3.head}") 
+                    transDS_pre = transDS_pre.filter(s"${x._1.head} != ${x._3.head}") 
                 }else{
                     //TODO
                 }
             }
-            transDS.show
+            transDS_pre.show
+            val superzipDS_pre = transDS_pre
             
+            
+            
+            
+            
+            
+            
+            
+            //data transform
+            var transDS = superzipDS_pre
             val length = features.length * transNames.length
             val sequence = Array.fill(length)(0).map(x => x ^ Random.nextInt(2))
+            val cache = state.cache.get(sequence.map(_.toString))
+            if(cache.isDefined){ //TODO Cache map, data cube
+                transDS = state.cache.get(sequence.map(_.toString)).get
+            }
             
             var handler = Seq[Tuple2[String, Seq[Int]]]()
             

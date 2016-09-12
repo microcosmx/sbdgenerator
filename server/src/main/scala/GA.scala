@@ -54,6 +54,8 @@ case class GA(
     mlreg: MLRegression)
 {
   
+  val state = State()
+  
   import scala.util._
   import env.sqlContext.implicits._
   
@@ -98,6 +100,20 @@ case class GA(
   }
   val actionLevel1 = actionsList.filter(_._1 == "level1").map(_._2).toSeq
   val actionLevel3 = actionsList.filter(_._1 == "level3").map(_._2).toSeq
+  
+  
+  //preprocessing
+  var transDS_pre = superzipDS//.filter(x => {x.getInt(0) > 1100}).sort(features(0).name)
+  //data transform
+  actionLevel1.foreach { x=>
+      if(x._2.head == "filter"){
+          transDS_pre = transDS_pre.filter(s"${x._1.head} != ${x._3.head}") 
+      }else{
+          //TODO
+      }
+  }
+  transDS_pre.show
+  val superzipDS_pre = transDS_pre
             
             
   //基因长度
@@ -190,22 +206,14 @@ case class GA(
   }
   
   def dataTransformProcess(sequence: Array[Int]) = {
-      var transDS = superzipDS//.filter(x => {x.getInt(0) > 1100}).sort(features(0).name)
-            
-      transDS.printSchema()
-      transDS.show()
       //data transform
-      actionLevel1.foreach { x=>
-          if(x._2.head == "filter"){
-              transDS = transDS.filter(s"${x._1.head} != ${x._3.head}") 
-          }else{
-              //TODO
-          }
-      }
-      transDS.show
-      
+      var transDS = superzipDS_pre
       val length = features.length * transNames.length
-      val sequence = Array.fill(length)(0).map(x => x ^ Random.nextInt(2))
+      //val sequence = Array.fill(length)(0).map(x => x ^ Random.nextInt(2))
+      val cache = state.cache.get(sequence.map(_.toString))
+      if(cache.isDefined){
+          transDS = state.cache.get(sequence.map(_.toString)).get
+      }
       
       var handler = Seq[Tuple2[String, Seq[Int]]]()
       
