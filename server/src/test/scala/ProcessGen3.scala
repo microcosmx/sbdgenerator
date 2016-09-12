@@ -180,11 +180,12 @@ class ProcessGen3 extends FlatSpec with Matchers with BeforeAndAfterAll with Tes
             
             
             
+            val sequence1 = Array.fill(length)(0).map(x => x ^ Random.nextInt(2))
             
             //data transform
             var transDS = superzipDS_pre
             val length = features.length * transNames.length
-            val sequence = Array.fill(length)(0).map(x => x ^ Random.nextInt(2))
+            val sequence = sequence1
             val cache = state.cache.get(sequence.map(_.toString))
             if(cache.isDefined){ //TODO Cache map, data cube
                 transDS = state.cache.get(sequence.map(_.toString)).get
@@ -206,6 +207,10 @@ class ProcessGen3 extends FlatSpec with Matchers with BeforeAndAfterAll with Tes
               val methodx = ru.typeOf[Transform].declaration(ru.newTermName(x._1)).asMethod
               transDS = instanceMirror.reflectMethod(methodx)(transDS, x._2).asInstanceOf[Dataset[Row]]
             })
+            
+            if(cache.isEmpty){ //TODO Cache map, data cube
+                state.cache.put(sequence.map(_.toString), transDS)
+            }
             
             transDS
             
