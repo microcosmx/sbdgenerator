@@ -76,6 +76,9 @@ case class GA(
   val features = superzipDS.schema.fields
   val featureNames = features.map(_.name).toSeq
   
+  val mlstat = StatGenetor(spark)
+  val stats = mlstat.statFeaturess(superzipDS)
+  
   val actions = spark.read
       //.schema(schema1)
       .option("header", "true")
@@ -119,7 +122,7 @@ case class GA(
   //基因长度
   val length = features.length * transNames.length
   println(s"----------$length")
-   
+  
   //迭代次数，最大子代数
   val MAX_GENERATION = 5
    
@@ -208,11 +211,9 @@ case class GA(
   def dataTransformProcess(sequence1: Array[Int]) = {
       //data transform
       var transDS = superzipDS_pre
-      val length = features.length * transNames.length
-      val sequence = sequence1
-      val cache = state.cache.get(sequence.map(_.toString))
-      if(cache.isDefined){ //TODO Cache map, data cube
-          transDS = state.cache.get(sequence.map(_.toString)).get
+      val sequence = sequence1.toSeq
+      if(state.cache.get(sequence).isDefined){ //TODO Cache map, data cube
+          transDS = state.cache.get(sequence).get
       }
       
       var handler = Seq[Tuple2[String, Seq[Int]]]()
@@ -229,12 +230,13 @@ case class GA(
       
       handler.foreach(x => {
         val methodx = ru.typeOf[Transform].declaration(ru.newTermName(x._1)).asMethod
-        transDS = instanceMirror.reflectMethod(methodx)(transDS, x._2).asInstanceOf[Dataset[Row]]
+        transDS = instanceMirror.reflectMethod(methodx)(transDS, x._2, stats).asInstanceOf[Dataset[Row]]
       })
-      
-      if(cache.isEmpty){ //TODO Cache map, data cube
-          state.cache.put(sequence.map(_.toString), transDS)
+      /*
+      if(state.cache.get(sequence).isEmpty){ //TODO Cache map, data cube
+          state.cache += (sequence -> transDS)
       }
+      */
       
       transDS
   }

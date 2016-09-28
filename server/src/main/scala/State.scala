@@ -44,11 +44,11 @@ case class params(
 
 
 case class State(
-    universe: Long = 0,
-    generation: Long = -1,
-    modificationTime: Long = -1,
-    cacheCount: Long = 0,
-    cache: Map[Array[String], Dataset[Row]] = Map())
+    var universe: Long = 0,
+    var generation: Long = -1,
+    var modificationTime: Long = -1,
+    var cacheCount: Long = 0,
+    var cache: Map[Seq[Int], Dataset[Row]] = Map())
 {
     def makeId(prefix: String) = s"$prefix-0"
 }

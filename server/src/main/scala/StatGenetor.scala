@@ -40,6 +40,39 @@ case class StatGenetor(
         println(summary.numNonzeros)  // number of nonzeros in each column
     }
     
+    def statFeaturess(dataset:Dataset[Row] ) = {
+      
+        import org.apache.spark.mllib.linalg.Vectors
+        import org.apache.spark.mllib.stat.{MultivariateStatisticalSummary, Statistics}
+        
+        import org.apache.spark.ml.feature.{OneHotEncoder, StringIndexer}
+        import scala.reflect.runtime.{universe => ru}
+        
+        var fs = dataset.schema.fields
+        var fsNames = fs.map(_.name).toSeq
+        
+        val datasetRDD = dataset.rdd.map { row => 
+              val result = row.toSeq.map(x=>{
+                if(x.isInstanceOf[String]) 0.0 
+                else if(x.isInstanceOf[Int]) x.asInstanceOf[Int].toDouble
+                else if(x.isInstanceOf[Long]) x.asInstanceOf[Long].toDouble
+                else if(x.isInstanceOf[Double]) x.asInstanceOf[Double].toDouble
+                else 0.0
+              })
+              
+              val features = Vectors.dense(result.toArray)
+              features
+         }
+        
+        // Compute column summary statistics.
+        val summary: MultivariateStatisticalSummary = Statistics.colStats(datasetRDD)
+        println(summary.mean)  // a dense vector containing the mean value for each column
+        println(summary.variance)  // column-wise variance
+        println(summary.numNonzeros)  // number of nonzeros in each column
+        
+        summary
+    }
+    
     def Correlations() = {
         import org.apache.spark.mllib.linalg._
         import org.apache.spark.mllib.stat.Statistics

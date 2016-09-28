@@ -22,6 +22,9 @@ import org.apache.spark.mllib.util.MLUtils
 import org.apache.spark.mllib.classification.{SVMModel, SVMWithSGD}
 import org.apache.spark.mllib.evaluation.BinaryClassificationMetrics
 
+import org.apache.spark.mllib.linalg.Vectors
+import org.apache.spark.mllib.stat.{MultivariateStatisticalSummary, Statistics}
+
 import scala._
 import scala.util._
 
@@ -34,7 +37,7 @@ case class Transform(
     import spark.implicits._
     import org.apache.spark.sql.catalyst.encoders.{OuterScopes, RowEncoder}
   
-    def trans1(data: Dataset[Row], indexs: Seq[Int]) = {
+    def trans1(data: Dataset[Row], indexs: Seq[Int], stats: MultivariateStatisticalSummary) = {
       val features = data.schema.fields
       val featureNames = indexs.map(x=>features(x).name)
       println(s"-----trans1--filter null rows--${featureNames}-----")
@@ -45,7 +48,7 @@ case class Transform(
       })
     }
     
-    def trans2(data: Dataset[Row], indexs: Seq[Int]) = {
+    def trans2(data: Dataset[Row], indexs: Seq[Int], stats: MultivariateStatisticalSummary) = {
       val features = data.schema.fields
       val featureNames = indexs.map(x=>features(x).name)
       val filterColIdx = Random.nextInt(features.length)
@@ -54,7 +57,7 @@ case class Transform(
         .withColumn(features(filterColIdx).name, lit(Random.nextInt(100)))
     }
     
-    def trans3(data: Dataset[Row], indexs: Seq[Int]) = {
+    def trans3(data: Dataset[Row], indexs: Seq[Int], stats: MultivariateStatisticalSummary) = {
       val features = data.schema.fields
       val featureNames = indexs.map(x=>features(x).name)
       println(s"-----trans3--math log--${featureNames}-----")
@@ -65,6 +68,7 @@ case class Transform(
             "string" -> "getString",
             "date" -> "getDate"
         )
+      
       val result = data.map(row => {
           val typeMirror = ru.runtimeMirror(row.getClass.getClassLoader)
           val instanceMirror = typeMirror.reflect(row)
@@ -75,7 +79,10 @@ case class Transform(
               val newrow = newrowSeq.zipWithIndex.map(x=>{
                   if(idxList contains x._2){
                       val methodX = ru.typeOf[Row].declaration(ru.newTermName(typeMap(features(x._2).dataType.simpleString))).asMethod
-                      Math.log(instanceMirror.reflectMethod(methodX)(x._2).asInstanceOf[Double])
+                      if(stats.variance(x._2)>100)
+                        Math.log(instanceMirror.reflectMethod(methodX)(x._2).asInstanceOf[Double])
+                      else
+                        instanceMirror.reflectMethod(methodX)(x._2).asInstanceOf[Double]
                   }else{
                       x._1
                   }
@@ -91,7 +98,7 @@ case class Transform(
       result
     }
     
-    def trans4(data: Dataset[Row], indexs: Seq[Int]) = {
+    def trans4(data: Dataset[Row], indexs: Seq[Int], stats: MultivariateStatisticalSummary) = {
       val features = data.schema.fields
       val featureNames = indexs.map(x=>features(x).name)
       println(s"-----trans4--transform null rows--${featureNames}-----")
@@ -121,7 +128,7 @@ case class Transform(
       result
     }
     
-    def trans5(data: Dataset[Row], indexs: Seq[Int]) = {
+    def trans5(data: Dataset[Row], indexs: Seq[Int], stats: MultivariateStatisticalSummary) = {
       val features = data.schema.fields
       val featureNames = indexs.map(x=>features(x).name)
       println(s"-----trans5--cube--${featureNames}-----")
