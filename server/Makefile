@@ -36,8 +36,8 @@ sync:
 	cp -r Makefile conf data data2 target/scala-2.11/$(jar) /Users/admin/1_unix_server/sbdgenerator/
 	
 upload_data:
-	hadoop fs -put /opt/sbdgenerator/data  hdfs://10.141.212.21:9000/user/root/
-	hadoop fs -put /opt/sbdgenerator/data2  hdfs://10.141.212.21:9000/user/root/
+	hadoop fs -put -f /opt/sbdgenerator/data  hdfs://10.141.212.21:9000/user/root/
+	hadoop fs -put -f /opt/sbdgenerator/data2  hdfs://10.141.212.21:9000/user/root/
 	
 submit_yarn:
 	spark-submit --master yarn --class Main $(jar)
