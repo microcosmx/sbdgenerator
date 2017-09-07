@@ -65,6 +65,9 @@ object StreamMain extends App {
         import env.sqlContext.implicits._
         
         //bash: nc -l localhost 9999
+        //sudo yum install NetCat
+        //nc -lk 9999
+        //cat /etc/profile | nc -lk 9999
         
         val black_list = sc.parallelize(Array("fail", "sad")).
           map(black_word => (black_word, black_word))
@@ -77,7 +80,8 @@ object StreamMain extends App {
         val flattenWord = input_word.flatMap(_.split(" ")).
           map(row => {
             (row, row)
-          })
+          });
+        flattenWord.print();
     
         val not_black_word = flattenWord.transform(fw => {
           fw.leftOuterJoin(black_list). // 左连接
