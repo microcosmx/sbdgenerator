@@ -9,6 +9,9 @@ build:
 
 clean:
 	rm -r target
+	
+submit_cdh:
+	spark-submit --master yarn-client --class cdn.CDNSampleRemote $(args)
 
 submit:
 	spark-submit --class Main $(args)

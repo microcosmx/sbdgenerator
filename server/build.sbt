@@ -1,3 +1,4 @@
+
 scalaVersion := "2.11.8"
 name := "sbdgenerator"
 
@@ -41,7 +42,10 @@ libraryDependencies ++= Seq(
     "com.twitter" %% "util-eval" % "6.35.0",
     "com.twitter" %% "util-collection" % "6.35.0",
     
-    "org.bitbucket.fwilhelm" % "org.jenetics" % "3.5.1"
+    "org.bitbucket.fwilhelm" % "org.jenetics" % "3.5.1",
+    
+    // https://mvnrepository.com/artifact/org.apache.parquet/parquet-avro
+	"org.apache.parquet" % "parquet-avro" % "1.8.1"
 	
 )
 
@@ -53,6 +57,7 @@ run in Compile <<= Defaults.runTask(fullClasspath in Compile, mainClass in (Comp
 
 assemblyMergeStrategy in assembly := {
 	case PathList("META-INF", "maven", "jline", "jline", xs @ _*) => MergeStrategy.concat
+	case PathList("META-INF", "maven", "org.slf4j", "slf4j-api", xs @ _*) => MergeStrategy.concat
     case "application.conf" => MergeStrategy.concat
     case x =>
         val oldStrategy = (assemblyMergeStrategy in assembly).value

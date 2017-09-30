@@ -38,6 +38,18 @@
   <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/com.twitter/util-collection_2.11/jars/util-collection_2.11-6.35.0.jar"/>
   <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/com.google.guava/guava/bundles/guava-16.0.1.jar"/>
   <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/org.bitbucket.fwilhelm/org.jenetics/jars/org.jenetics-3.5.1.jar"/>
+  <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/org.apache.parquet/parquet-avro/jars/parquet-avro-1.8.1.jar"/>
+  <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/org.apache.parquet/parquet-column/jars/parquet-column-1.8.1.jar"/>
+  <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/org.apache.parquet/parquet-common/jars/parquet-common-1.8.1.jar"/>
+  <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/org.apache.parquet/parquet-encoding/jars/parquet-encoding-1.8.1.jar"/>
+  <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/org.apache.parquet/parquet-hadoop/jars/parquet-hadoop-1.8.1.jar"/>
+  <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/org.apache.parquet/parquet-format/jars/parquet-format-2.3.0-incubating.jar"/>
+  <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/org.apache.parquet/parquet-jackson/jars/parquet-jackson-1.8.1.jar"/>
+  <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/org.codehaus.jackson/jackson-core-asl/jars/jackson-core-asl-1.9.13.jar"/>
+  <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/org.codehaus.jackson/jackson-mapper-asl/jars/jackson-mapper-asl-1.9.13.jar"/>
+  <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/org.apache.commons/commons-compress/jars/commons-compress-1.4.1.jar"/>
+  <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/org.tukaani/xz/jars/xz-1.0.jar"/>
+  <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/it.unimi.dsi/fastutil/jars/fastutil-6.5.7.jar"/>
   <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/org.scalatest/scalatest_2.11/bundles/scalatest_2.11-2.2.6.jar"/>
   <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/org.scalacheck/scalacheck_2.11/jars/scalacheck_2.11-1.13.0.jar"/>
   <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/org.scala-sbt/test-interface/jars/test-interface-1.0.jar"/>
@@ -50,11 +62,7 @@
   <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/org.apache.avro/avro-ipc/jars/avro-ipc-1.7.7-tests.jar"/>
   <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/org.apache.avro/avro-ipc/jars/avro-ipc-1.7.7.jar"/>
   <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/org.apache.avro/avro/jars/avro-1.7.7.jar"/>
-  <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/org.codehaus.jackson/jackson-core-asl/jars/jackson-core-asl-1.9.13.jar"/>
-  <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/org.codehaus.jackson/jackson-mapper-asl/jars/jackson-mapper-asl-1.9.13.jar"/>
   <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/org.xerial.snappy/snappy-java/bundles/snappy-java-1.1.2.4.jar"/>
-  <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/org.apache.commons/commons-compress/jars/commons-compress-1.4.1.jar"/>
-  <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/org.tukaani/xz/jars/xz-1.0.jar"/>
   <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/org.slf4j/slf4j-api/jars/slf4j-api-1.7.16.jar"/>
   <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/com.twitter/chill_2.11/jars/chill_2.11-0.8.0.jar"/>
   <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/com.twitter/chill-java/jars/chill-java-0.8.0.jar"/>
@@ -121,7 +129,7 @@
   <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/org.json4s/json4s-core_2.11/jars/json4s-core_2.11-3.2.11.jar"/>
   <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/org.json4s/json4s-ast_2.11/jars/json4s-ast_2.11-3.2.11.jar"/>
   <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/com.thoughtworks.paranamer/paranamer/jars/paranamer-2.6.jar"/>
-  <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/org.scala-lang/scalap/jars/scalap-2.11.0.jar"/>
+  <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/org.scala-lang/scalap/jars/scalap-2.11.8.jar"/>
   <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/org.glassfish.jersey.core/jersey-client/jars/jersey-client-2.22.2.jar"/>
   <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/javax.ws.rs/javax.ws.rs-api/jars/javax.ws.rs-api-2.0.1.jar"/>
   <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/org.glassfish.jersey.core/jersey-common/jars/jersey-common-2.22.2.jar"/>
@@ -160,13 +168,6 @@
   <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/org.codehaus.janino/commons-compiler/jars/commons-compiler-2.7.8.jar"/>
   <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/org.antlr/antlr4-runtime/jars/antlr4-runtime-4.5.3.jar"/>
   <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/commons-codec/commons-codec/jars/commons-codec-1.10.jar"/>
-  <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/org.apache.parquet/parquet-column/jars/parquet-column-1.7.0.jar"/>
-  <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/org.apache.parquet/parquet-common/jars/parquet-common-1.7.0.jar"/>
-  <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/org.apache.parquet/parquet-encoding/jars/parquet-encoding-1.7.0.jar"/>
-  <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/org.apache.parquet/parquet-generator/jars/parquet-generator-1.7.0.jar"/>
-  <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/org.apache.parquet/parquet-hadoop/jars/parquet-hadoop-1.7.0.jar"/>
-  <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/org.apache.parquet/parquet-format/jars/parquet-format-2.3.0-incubating.jar"/>
-  <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/org.apache.parquet/parquet-jackson/jars/parquet-jackson-1.7.0.jar"/>
   <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/org.apache.spark/spark-hive_2.11/jars/spark-hive_2.11-2.0.0.jar"/>
   <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/com.twitter/parquet-hadoop-bundle/jars/parquet-hadoop-bundle-1.6.0.jar"/>
   <classpathentry kind="lib" path="/Users/admin/.ivy2/cache/org.spark-project.hive/hive-exec/jars/hive-exec-1.2.1.spark2.jar"/>
