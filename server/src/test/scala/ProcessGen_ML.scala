@@ -132,7 +132,7 @@ class ProcessGen_ML extends FlatSpec with Matchers with BeforeAndAfterAll with T
             
 //            mlreg.linear()
 //            mlreg.GeneralizedLinearRegression()
-//            mlreg.dtree()
+            mlreg.dtree()
 //            mlreg.randomforest()
 //            mlreg.Gradient_boosted_tree()
 //            mlreg.Survival_regression()

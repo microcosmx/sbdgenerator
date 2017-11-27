@@ -48,3 +48,9 @@ spark-submit \
 --executor-memory 1G \
 --total-executor-cores 1 \
 /opt/workspace_data/cdh_samples/sbdgenerator-assembly-0.1-SNAPSHOT.jar
+
+
+
+
+
+
